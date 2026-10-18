@@ -249,7 +249,8 @@ details.more[open] > summary { margin-bottom: var(--space-2); }
 }
 
 .layer-panel {
-  position: absolute; top: 64px; right: 56px; background: var(--surface-glass); border: 1px solid var(--border);
+  /* 8 px under the button bar (it ends at 65 px), right edge in line with it. */
+  position: absolute; top: 73px; right: 60px; background: var(--surface-glass); border: 1px solid var(--border);
   border-radius: 8px; padding: 6px 10px; font-size: var(--text-md); backdrop-filter: blur(8px); min-width: 170px;
 }
 .layer-panel summary { cursor: pointer; color: var(--ink); font-weight: 600; padding: 2px 0; }

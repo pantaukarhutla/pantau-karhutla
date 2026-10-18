@@ -123,6 +123,10 @@ fail without stopping the fire update.
 - **Places:** geoBoundaries IDN (BPS 2020 regencies), regrouped into the 38 provinces of 2022 (Papua Selatan, Tengah, Pegunungan, Barat Daya); KHG 2017 peat units (KLHK); GeoNames.
 - **Research inputs:** Gaveau et al. 2021 (ESSD 13, 5353), Vetrita & Cochrane 2019, Hoscilo et al. 2011, de Groot et al. 2007, Field et al. 2016, and others cited in `docs/`.
 
+## Contact
+
+Corrections, questions, press and security reports: pantaukarhutla@proton.me
+
 ## Licence
 
 Code: MIT (see `LICENSE`). Data keeps its sources' terms: NASA FIRMS (open), DEA Hotspots (CC BY 4.0), CAMS via Open-Meteo (attribution), credited in the app.

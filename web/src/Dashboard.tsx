@@ -5,7 +5,7 @@ import type { AreaEstimate, Dashboard as DashboardData } from "./api/events";
 import { LineChart, type Series } from "./charts";
 import { dateFormat, dateLocale, fmtDate, fmtDay, fmtInt, fmtShort, fmtSig2 } from "./format";
 import type { Lang, Strings } from "./i18n";
-import { REPO_URL } from "./links";
+import { CONTACT_EMAIL, REPO_URL } from "./links";
 
 // Season comparison: categorical slots (dark steps of the validated reference
 // palette) in fixed order, assigned chronologically so a season keeps its
@@ -201,6 +201,7 @@ export function Sources({ s }: { s: Strings }) {
         <a href={REPO_URL} target="_blank" rel="noopener">
           GitHub
         </a>
+        . {s.contactLine} <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>
       </p>
       <p className="note disclaimer">{s.disclaimer}</p>
     </Card>

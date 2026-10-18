@@ -55,8 +55,9 @@ interface Inputs {
   now: number;
 }
 
-/** Daily mean PM2.5 at the point per WIB date, for days the forecast covers fully. */
-function dailyAir(smog: Smog, lon: number, lat: number): DayAir[] {
+/** Daily mean PM2.5 at the point per WIB date, for days the forecast covers fully, from today on.
+ *  smog.json also holds past (analysis) hours, so a past day would otherwise lead the list. */
+function dailyAir(smog: Smog, lon: number, lat: number, today: string): DayAir[] {
   const byDay = new Map<string, number[]>();
   smog.times.forEach((t, k) => {
     const day = wibDate(t.endsWith("Z") ? t : `${t}Z`);
@@ -64,7 +65,7 @@ function dailyAir(smog: Smog, lon: number, lat: number): DayAir[] {
   });
   const perDay = Math.max(...[...byDay.values()].map((v) => v.length));
   return [...byDay.entries()]
-    .filter(([, v]) => v.length === perDay)
+    .filter(([date, v]) => v.length === perDay && date >= today)
     .map(([date, v]) => {
       const pm25 = v.reduce((a, b) => a + b, 0) / v.length;
       return { date, pm25, ispu: ispuOf(pm25) };
@@ -90,7 +91,7 @@ export function assessPlace(lon: number, lat: number, d: Inputs): PlaceReport {
   return {
     lon,
     lat,
-    air: d.smog ? dailyAir(d.smog, lon, lat) : [],
+    air: d.smog ? dailyAir(d.smog, lon, lat, wibDate(new Date(d.now).toISOString())) : [],
     danger: day && pct !== undefined && pct >= 0 ? { date: day.date, pct, cls: riskClassOf(pct) } : null,
     burnYears: d.burnGrid ? Math.max(0, years ?? 0) : null,
     fires,

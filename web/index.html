@@ -4,12 +4,60 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta name="theme-color" content="#0d0d0d" />
-    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Ccircle cx='8' cy='8' r='6' fill='%23fab219'/%3E%3C/svg%3E" />
     <title>Pantau Karhutla — Peta Kebakaran Hutan &amp; Lahan Indonesia</title>
     <meta name="description" content="Peta real-time kebakaran hutan dan lahan di Indonesia: titik api satelit, kabut asap, kualitas udara, dan riwayat sejak Juli 2026." />
+    <link rel="canonical" href="https://pantaukarhutla.com/" />
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Ccircle cx='8' cy='8' r='6' fill='%23fab219'/%3E%3C/svg%3E" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/icon-32.png" />
+    <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+
+    <!-- Share preview (WhatsApp, Facebook, Threads, X, Telegram). -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Pantau Karhutla" />
+    <meta property="og:locale" content="id_ID" />
+    <meta property="og:url" content="https://pantaukarhutla.com/" />
+    <meta property="og:title" content="Pantau Karhutla — Peta Kebakaran Hutan &amp; Lahan Indonesia" />
+    <meta property="og:description" content="Titik api satelit, kabut asap, dan kualitas udara di seluruh Indonesia, real-time. Cek asap di kotamu." />
+    <meta property="og:image" content="https://pantaukarhutla.com/og.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="Peta titik panas kebakaran hutan dan lahan di Indonesia" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Pantau Karhutla — Peta Kebakaran Hutan &amp; Lahan Indonesia" />
+    <meta name="twitter:description" content="Titik api satelit, kabut asap, dan kualitas udara di seluruh Indonesia, real-time. Cek asap di kotamu." />
+    <meta name="twitter:image" content="https://pantaukarhutla.com/og.png" />
+
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "WebApplication",
+        "name": "Pantau Karhutla",
+        "url": "https://pantaukarhutla.com/",
+        "inLanguage": "id",
+        "applicationCategory": "UtilitiesApplication",
+        "operatingSystem": "Web",
+        "isAccessibleForFree": true,
+        "description": "Peta real-time kebakaran hutan dan lahan di Indonesia: titik api dari satelit NASA, kabut asap, kualitas udara, dan riwayat sejak Juli 2026.",
+        "sameAs": ["https://github.com/pantaukarhutla/pantau-karhutla"]
+      }
+    </script>
   </head>
   <body>
-    <div id="root"></div>
+    <!-- What crawlers and no-JavaScript visitors read; the app replaces it on load. -->
+    <div id="root">
+      <main style="max-width: 640px; margin: 48px auto; padding: 0 20px; font-family: system-ui, sans-serif; color: #f0efec; background: #0d0d0d">
+        <h1>Pantau Karhutla: peta kebakaran hutan &amp; lahan Indonesia</h1>
+        <p>
+          Pantau titik api kebakaran hutan dan lahan (karhutla) di seluruh Indonesia dari data satelit NASA
+          (VIIRS dan MODIS), kabut asap dan kualitas udara (PM2,5) per kota, prakiraan asap, risiko kebakaran,
+          dan riwayat sejak 1 Juli 2026.
+        </p>
+        <p>Cek lokasimu: lihat kualitas udara, dari mana asap datang, dan kebakaran terdekat dari kotamu.</p>
+        <p>Independen, gratis, dan sumber terbuka di GitHub: <a href="https://github.com/pantaukarhutla/pantau-karhutla">pantaukarhutla/pantau-karhutla</a>.</p>
+        <noscript><p>Peta interaktif ini memerlukan JavaScript.</p></noscript>
+      </main>
+    </div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

@@ -3,6 +3,7 @@
 import { createContext, useContext, useEffect, useRef } from "react";
 import { METHOD_IDS, METHODS, type MethodId } from "./methodText";
 import type { Lang, Strings } from "./i18n";
+import { REPO_URL } from "./links";
 
 const OpenMethod = createContext<(id: MethodId) => void>(() => {});
 export const MethodProvider = OpenMethod.Provider;
@@ -85,7 +86,12 @@ export function MethodologyPanel({ at, lang, s, onClose, onPick }: { at: MethodI
               <li key={t}>{t}</li>
             ))}
           </ul>
-          <p className="note">{s.methodFooter}</p>
+          <p className="note">
+            {s.methodFooter}{" "}
+            <a href={REPO_URL} target="_blank" rel="noopener">
+              {REPO_URL.replace("https://", "")}
+            </a>
+          </p>
         </div>
       </div>
     </div>

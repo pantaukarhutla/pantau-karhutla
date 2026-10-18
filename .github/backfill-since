@@ -1,0 +1,2 @@
+# To backfill from a day, put it (YYYY-MM-DD, e.g. 2026-07-01) on the first
+# line and push: the next pipeline run backfills once per change of this file.

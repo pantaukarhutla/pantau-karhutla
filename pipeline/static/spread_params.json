@@ -1,0 +1,37 @@
+{
+  "fitted_at": "2026-10-17",
+  "params": {
+    "p0_peat": 0.08,
+    "p0_other": 0.08,
+    "persist_peat": 0.75,
+    "persist_other": 0.5,
+    "p_spot": 0.01,
+    "c1": 0.045,
+    "c2": 0.131,
+    "a_slope": 0.078,
+    "rain_scale_mm": 5.0,
+    "members": 64
+  },
+  "fit": {
+    "season": 2019,
+    "cases": 143,
+    "ap_model": 0.2016,
+    "ap_persistence": 0.1321,
+    "ap_dilated": 0.1148,
+    "csi_model_0.5": 0.2063,
+    "csi_model_best": 0.2133,
+    "csi_persistence": 0.2105,
+    "csi_dilated": 0.1473
+  },
+  "test": {
+    "season": 2023,
+    "cases": 143,
+    "ap_model": 0.0826,
+    "ap_persistence": 0.0547,
+    "ap_dilated": 0.0571,
+    "csi_model_0.5": 0.107,
+    "csi_model_best": 0.1154,
+    "csi_persistence": 0.1098,
+    "csi_dilated": 0.0797
+  }
+}

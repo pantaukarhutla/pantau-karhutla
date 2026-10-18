@@ -1,0 +1,16 @@
+# Deploy with `npx wrangler deploy` from this folder (docs/deploy.md, section 4).
+name = "haze-cron"
+main = "worker.js"
+compatibility_date = "2026-09-01"
+
+[triggers]
+# 30 min after GitHub's own slot (pipeline.yml: "17 */2 * * *"): fills in only
+# when that run was dropped.
+# The half-hour slots start fires-only runs, but only with FAST = "1".
+crons = ["47 */2 * * *", "7,37 * * * *"]
+
+[vars]
+REPO = "pantaukarhutla/pantau-karhutla"
+# "1": a fires-only run every 30 min between the full runs (~3,000 more
+# Actions minutes a month; fine for a public repo, over the private free tier).
+FAST = "0"

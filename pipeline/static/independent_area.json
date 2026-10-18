@@ -1,0 +1,8 @@
+{
+ "method": "Stratified random sample (700 points) labelled from Sentinel-2/Landsat dNBR and Sentinel-1 VH change, Olofsson et al. 2014 / Stehman 2014 estimator, with label-error correction from 268 expert points (Gaveau et al. 2021). Code: research/burned_area/.",
+ "computed": "2026-10-17",
+ "estimates": [
+  {"provinsi": "Kalimantan Tengah", "season": 2019, "area_ha": 648845, "ci95": [388976, 952412], "official_ha": 317749, "others": {"Gaveau et al. 2021 (Sentinel-2)": 473000, "MODIS MCD64A1": 518000, "ESA FireCCI": 626000}},
+  {"provinsi": "Kalimantan Tengah", "season": 2026, "area_ha": 664171, "ci95": [374325, 1055306], "official_ha": 7634, "provisional": true}
+ ]
+}

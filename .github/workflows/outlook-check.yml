@@ -1,0 +1,41 @@
+# Smoke test (manual, or when the outlook code changes) of the keyless outlook sources (NOAA CPC, BoM IOD and the
+# Open-Meteo seasonal ensemble) from a GitHub runner; prints what the
+# pipeline would publish. Needs no secrets.
+name: outlook-check
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ["pipeline/src/haze/outlook.py", ".github/workflows/outlook-check.yml"]
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+      - name: Build outlook
+        working-directory: pipeline
+        run: |
+          uv sync --locked --no-dev
+          uv run --no-dev python - <<'PY'
+          import json, logging, tempfile
+          from pathlib import Path
+          import httpx
+          from haze import outlook
+          logging.basicConfig(level=logging.INFO)
+          # Raw shape of one seasonal response: the keys the parser relies on.
+          r = httpx.get(outlook.SEASONAL_URL, params={"latitude": -2.21, "longitude": 113.92,
+                        "daily": "precipitation_sum", "forecast_days": 60}, timeout=60)
+          print("seasonal HTTP", r.status_code)
+          d = r.json()
+          keys = sorted(d.get("daily", {}).keys())
+          print("daily keys:", len(keys), keys[:5], "...", keys[-3:])
+          obj = outlook.build(Path(tempfile.mkdtemp()))
+          print(json.dumps({k: obj.get(k) for k in ("enso_phase", "iod_positive", "dry_chance")}, indent=1))
+          assert obj["dry_chance"], "seasonal dry chance came back empty"
+          PY

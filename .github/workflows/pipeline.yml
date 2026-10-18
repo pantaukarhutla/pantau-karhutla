@@ -1,0 +1,161 @@
+# The scheduled job: poll FIRMS NRT, rebuild this season's events, publish.
+# State (the DuckDB file + downloaded reference data) lives in the Actions
+# cache. If the cache is evicted, `haze run` backfills the season from the
+# FIRMS API on its next run (or from the committed seed without a key).
+name: pipeline
+
+on:
+  schedule:
+    # Every 2 hours while the repo is private (a run is ~3 min, ~1,100 of the
+    # 2,000 free private minutes a month; docs/deploy.md). Public repos have
+    # no minute limit: go to every 30 min once public.
+    - cron: "17 */2 * * *"
+    # Backup slot: GitHub's schedule is best-effort and dropped the 06:17 and
+    # 08:17 runs on 18 Oct 2026. At :47 the gate job below runs the pipeline
+    # only if nothing ran in the last 100 min; otherwise it stops in seconds.
+    - cron: "47 */2 * * *"
+  workflow_dispatch:
+    inputs:
+      fast:
+        description: "Fires only (ingest, events, publish; ~2 min): for a 30-minute clock (cron Worker)"
+        type: boolean
+        default: false
+      backfill_since:
+        description: "Backfill from this day (YYYY-MM-DD, e.g. 2026-07-01): refill FIRMS (SP replaces NRT), DEA and Singapore PM2.5, then rebuild every fire and page (~20-40 min). Empty: normal run."
+        type: string
+        default: ""
+      refresh_pm25:
+        description: "With a backfill: also refetch the daily CAMS PM2.5 history"
+        type: boolean
+        default: false
+  # Also when the workflow itself changes, so a change is tried at once, and
+  # when .github/backfill-since changes: a run backfills from the day it names
+  # once per change of the file (for whoever can push but not run workflows).
+  push:
+    branches: [main]
+    paths: [".github/workflows/pipeline.yml", ".github/backfill-since"]
+
+concurrency:
+  group: pipeline
+  cancel-in-progress: false
+
+jobs:
+  # Only in the backup slot: did the :17 run happen?
+  gate:
+    if: github.event.schedule == '47 */2 * * *'
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    permissions:
+      actions: read
+    outputs:
+      go: ${{ steps.check.outputs.go }}
+    steps:
+      - id: check
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          last=$(gh run list -R "$GITHUB_REPOSITORY" --workflow pipeline.yml --limit 5 --json databaseId,createdAt \
+            --jq "[.[] | select(.databaseId != ${{ github.run_id }})][0].createdAt // empty")
+          age=$(( ($(date +%s) - $(date -d "${last:-1970-01-01T00:00:00Z}" +%s)) / 60 ))
+          echo "last pipeline run: ${last:-none} (${age} min ago)"
+          echo "go=$([ "$age" -ge 100 ] && echo true || echo false)" >> "$GITHUB_OUTPUT"
+
+  run:
+    needs: gate
+    # Runs unless the backup slot's gate found a recent run (a skipped or
+    # failed gate never blocks the pipeline).
+    if: always() && !(needs.gate.result == 'success' && needs.gate.outputs.go == 'false')
+    runs-on: ubuntu-latest
+    # A cold start backfills the whole season from the API (~300 calls); a
+    # manual backfill also refills DEA and station history and rewrites every page.
+    timeout-minutes: ${{ (inputs.backfill_since != '' || github.event_name == 'push') && 150 || 55 }}
+    env:
+      FIRMS_MAP_KEY: ${{ secrets.FIRMS_MAP_KEY }}
+      HAZE_DATA_DIR: ${{ github.workspace }}/data
+      # public/ sits inside the cached dir so unchanged files keep their
+      # mtimes and the R2 sync uploads only what changed.
+      HAZE_PUBLIC_DIR: ${{ github.workspace }}/data/public
+      R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+      # Absolute links in the alert feeds (e.g. https://pantau.example/).
+      HAZE_SITE_URL: ${{ vars.SITE_URL }}
+    steps:
+      # Without FIRMS_MAP_KEY the job still runs: a cold start loads the
+      # committed season seed (pipeline/seed/) and every run polls FIRMS'
+      # keyless 7-day regional files. With the key it uses the area API.
+      # Every run also adds DEA Hotspots (keyless direct readout, haze.dea)
+      # for passes FIRMS doesn't have yet.
+      - name: Fire sources
+        run: |
+          echo "FIRMS source: ${{ env.FIRMS_MAP_KEY != '' && 'area API (MAP_KEY)' || 'keyless regional files + seed' }}; plus DEA Hotspots"
+
+      - uses: actions/checkout@v4
+
+      - uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+
+      - name: Restore state
+        uses: actions/cache/restore@v4
+        with:
+          path: data
+          key: haze-state-${{ github.run_id }}
+          restore-keys: haze-state-
+
+      - name: Run pipeline
+        working-directory: pipeline
+        env:
+          BACKFILL_SINCE: ${{ inputs.backfill_since }}
+          REFRESH_PM25: ${{ inputs.refresh_pm25 && '--refresh-pm25' || '' }}
+        run: |
+          uv sync --locked --no-dev
+          # A request in .github/backfill-since that the saved state hasn't
+          # done yet: its first non-comment line is the start day.
+          request=../.github/backfill-since done="$HAZE_DATA_DIR/backfill-done"
+          if [ -z "$BACKFILL_SINCE" ] && [ -f "$request" ] && ! cmp -s "$request" "$done"; then
+            BACKFILL_SINCE=$(grep -v '^#' "$request" | head -n1 | tr -d '[:space:]')
+            echo "backfill requested in .github/backfill-since: $BACKFILL_SINCE"
+          fi
+          if [ -n "$BACKFILL_SINCE" ]; then
+            [[ "$BACKFILL_SINCE" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}$ ]] || { echo "backfill: bad date '$BACKFILL_SINCE'"; exit 1; }
+            status=0
+            uv run --no-dev haze backfill --since "$BACKFILL_SINCE" $REFRESH_PM25 || status=$?
+            # Marked done even if it failed (the job still fails, in red): a
+            # broken backfill must not rerun, at ~30 min each, every 2 hours.
+            if [ -f "$request" ]; then cp "$request" "$done"; fi
+            exit $status
+          else
+            uv run --no-dev haze run ${{ inputs.fast && '--fast' || '' }}
+          fi
+
+      - name: Save state
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: data
+          key: haze-state-${{ github.run_id }}
+
+      # Until R2 hosts the data, keep the output downloadable as one packed
+      # file: 100k small files took ~2 min of Actions time to upload one by one.
+      - name: Pack public files
+        if: env.R2_ACCESS_KEY_ID == ''
+        run: tar -C data -cf - public | zstd -T0 -3 -q -o public.tar.zst
+      - name: Upload public files
+        if: env.R2_ACCESS_KEY_ID == ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: public
+          path: public.tar.zst
+          compression-level: 0
+          retention-days: 2
+
+      # Enabled once R2 credentials exist (M3+): sync public/ to the bucket.
+      - name: Publish to R2
+        if: env.R2_ACCESS_KEY_ID != ''
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: auto
+        run: >
+          aws s3 sync data/public "s3://${{ vars.R2_BUCKET || 'haze' }}/v1"
+          --endpoint-url "https://${{ secrets.R2_ACCOUNT_ID }}.r2.cloudflarestorage.com"
+          --no-progress

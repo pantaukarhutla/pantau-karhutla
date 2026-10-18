@@ -1,0 +1,41 @@
+[project]
+name = "haze"
+version = "0.1.0"
+description = "Indonesia wildfire tracker: FIRMS hotspots to fire events"
+requires-python = ">=3.12"
+dependencies = [
+    "duckdb>=1.5.6",
+    "httpx>=0.28.1",
+    "numpy>=2.5.4",
+    "pandas>=3.0.6",
+    "pillow>=13.0.0",
+    "pyarrow>=26.0.0",
+    "pytz>=2026.5",
+    "scipy>=1.18.1",
+    "shapely>=2.2.0",
+]
+
+[project.scripts]
+haze = "haze.cli:main"
+
+[build-system]
+requires = ["uv_build>=0.11.32,<0.12.0"]
+build-backend = "uv_build"
+
+[dependency-groups]
+dev = [
+    "matplotlib>=3.11.2",
+    "pytest>=9.1.1",
+    "ruff>=0.17.1",
+]
+
+[tool.ruff]
+line-length = 120
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "W"]
+ignore = ["B905"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

@@ -127,7 +127,12 @@ jobs:
           AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
           AWS_DEFAULT_REGION: auto
-        run: >
-          aws s3 sync data/public "s3://${{ vars.R2_BUCKET || 'haze' }}/v1"
-          --endpoint-url "https://${{ secrets.R2_ACCOUNT_ID }}.r2.cloudflarestorage.com"
-          --no-progress
+          R2_ENDPOINT: https://${{ secrets.R2_ACCOUNT_ID }}.r2.cloudflarestorage.com
+          R2_DEST: s3://${{ vars.R2_BUCKET || 'haze' }}/v1
+        # 64 parallel uploads: the default 10 took over 25 min for a full
+        # upload (~100k files) and ran into the job's time limit. GeoJSON goes
+        # up as application/json so Cloudflare compresses it.
+        run: |
+          aws configure set default.s3.max_concurrent_requests 64
+          aws s3 sync data/public "$R2_DEST" --endpoint-url "$R2_ENDPOINT" --no-progress --only-show-errors --exclude "*.geojson"
+          aws s3 sync data/public "$R2_DEST" --endpoint-url "$R2_ENDPOINT" --no-progress --only-show-errors --exclude "*" --include "*.geojson" --content-type application/json

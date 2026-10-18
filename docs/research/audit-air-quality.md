@@ -480,7 +480,7 @@ not what people are breathing. Proposal:
 
 ## 6. Reproduce
 
-All scripts run with `/home/user/haze/pipeline/.venv/bin/python -I` and `OMP_NUM_THREADS=1`.
+All scripts run with `pipeline/.venv/bin/python -I` and `OMP_NUM_THREADS=1`.
 Without that setting, BLAS oversubscription on the shared box makes the kriging folds about
 200× slower. They read the DB copy read-only and never write to it or to the CAMS cache.
 

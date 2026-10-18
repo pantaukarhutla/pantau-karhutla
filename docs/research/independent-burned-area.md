@@ -585,7 +585,7 @@ UA 0.46 and PA 0.51.
 
 ---
 
-## 9. Code pointers (prototype, session scratchpad)
+## 9. Code pointers (prototype, local working folder, not in the repo)
 
 The scripts are in
 `scratch/burned/code/`. They

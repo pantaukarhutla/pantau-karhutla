@@ -1,7 +1,7 @@
 import duckdb, shapely, numpy as np, pandas as pd, sys
 B=sys.argv[1]; S=sys.argv[2]
 out={}
-for path,years in [('/home/user/haze/data/haze.duckdb',[2019,2023]),(S+'/audit/haze.duckdb',[2026])]:
+for path,years in [('data/haze.duckdb',[2019,2023]),(S+'/audit/haze.duckdb',[2026])]:
     c=duckdb.connect(path,read_only=True)
     for y in years:
         df=c.execute("""select id,satellite,sensor,acq_time,lat,lon,frp_mw,confidence,daynight,scan,track,on_peat,provinsi,is_static

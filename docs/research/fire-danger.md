@@ -8,7 +8,7 @@ Tags, as in `data-gis-layers.md`:
 - **[D]** read in the provider's documentation, in a directory listing, or in the paper's full text.
 - **[S]** search snippet or secondary source only.
 
-All pilot numbers below come from scripts in the session scratchpad, run against `data/haze.duckdb` and GFWED files. They are not part of the repo. Section 5 has enough detail to reproduce them.
+All pilot numbers below come from scripts in a local working folder (not in the repo), run against `data/haze.duckdb` and GFWED files. They are not part of the repo. Section 5 has enough detail to reproduce them.
 
 ---
 
@@ -497,7 +497,7 @@ Caveats:
   - `fire_weather (day DATE, i INT, j INT, source VARCHAR, run DATE, dc, dmc, ffmc, isi, bui, fwi, hth)`;
   - `danger_forecast (issued DATE, day DATE, lead INT, i, j, p DOUBLE, class VARCHAR)`, for verification.
 - **Output:** `danger/latest.json` in the same grid encoding as the smoke grids, with `{grid, days[], p[day][cell] as uint8 percent, class}`, plus per-cell tooltips (FFMC, DC and ISI with BMKG classes, HTH, peat %). MapLibre draws it as a raster or fill layer with a day slider, H+0..H+3 (to H+5 when GFWED is fresh).
-- **Pilot scripts** (session scratchpad, for reference): `build.py` (cell-day table), `evalp.py`, `eval2.py`, `eval3.py`, `eval4.py`, and `sub.py` (GFWED subsetter). They need only numpy, pandas, scipy, duckdb and shapely.
+- **Pilot scripts** (local working folder, not in the repo, for reference): `build.py` (cell-day table), `evalp.py`, `eval2.py`, `eval3.py`, `eval4.py`, and `sub.py` (GFWED subsetter). They need only numpy, pandas, scipy, duckdb and shapely.
 
 ---
 

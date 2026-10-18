@@ -300,7 +300,7 @@ def event_area(hs, season_r, k=K_KLHK):
 
 ## 7. Reproduction
 
-Scripts are in the session scratchpad (`scripts/build_hist.py`, `decompose.py`, `metrics.py`,
+Scripts are in a local working folder (not in the repo) (`scripts/build_hist.py`, `decompose.py`, `metrics.py`,
 `calib.py`, `peatfit.py`, `jitter.py`, `discunion.py`, `recommended.py`). To reproduce:
 
 1. Copy the DB.

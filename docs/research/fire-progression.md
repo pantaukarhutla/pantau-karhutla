@@ -20,7 +20,7 @@ How each claim was checked:
 - **[S]** abstract or snippet only.
 - **[M]** from memory; check before relying on it.
 - **[T]** tested from this container on 2026-10-17.
-- **[D]** measured on our own DuckDB (`data/haze.duckdb`, seasons 2019 and 2023), with scripts in the session scratchpad.
+- **[D]** measured on our own DuckDB (`data/haze.duckdb`, seasons 2019 and 2023), with scripts in a local working folder (not in the repo).
 
 ---
 

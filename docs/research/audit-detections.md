@@ -330,7 +330,7 @@ Measured on events, Jul 1 – Oct 16 of each year:
 
 The audit DB copy holds **2026 only** (Jan 1 – Oct 17). The 2019 and 2023 numbers come from the
 local `data/haze.duckdb`, opened read-only. It has 2015 and 2019–2025, and no NOAA-21 in 2023.
-Scripts are in the session scratchpad (`aq/rules.py`, `aq/tier.py`, `aq/newstatic.py`, `aq/*.sql`).
+Scripts are in a local working folder (not in the repo) (`aq/rules.py`, `aq/tier.py`, `aq/newstatic.py`, `aq/*.sql`).
 
 ---
 

@@ -54,14 +54,12 @@ Once the repo is public, the pipeline cron can move to every 30 min (see the com
 ## 4. A dependable schedule
 
 GitHub's `schedule` trigger is best-effort: on 17 and 18 Oct 2026 it dropped
-several 2-hourly runs. `pipeline.yml` therefore has a backup slot at :47 whose
-gate job runs the pipeline only if nothing ran in the last 100 minutes. If
-GitHub drops both slots, `deploy/cron-worker` adds a clock outside GitHub: a
-Cloudflare Worker with a Cron Trigger. Thirty minutes
-after each GitHub slot it asks GitHub when the pipeline last ran and, only if
-nothing ran in the last 100 minutes, starts it through the `workflow_dispatch`
-API. When GitHub's schedule works it does nothing, so Actions minutes are not
-doubled. Workers' free plan covers it (12 invocations a day).
+most 2-hourly runs. `pipeline.yml` asks for a run at :17 and :47. A clock
+outside GitHub fills the gaps: 15 minutes after each slot it asks GitHub when
+the pipeline last ran and, only if nothing ran in the last 40 minutes, starts
+it through the `workflow_dispatch` API. When GitHub's schedule works it does
+nothing. Use `deploy/vps-kick` on a server you have, or `deploy/cron-worker`
+(a Cloudflare Worker; its free plan covers it).
 
 1. Create a GitHub fine-grained personal access token for this repository only,
    with the permission **Actions: Read and write** and nothing else.

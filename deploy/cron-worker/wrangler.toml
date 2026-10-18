@@ -7,7 +7,7 @@ compatibility_date = "2026-09-01"
 # 30 min after GitHub's own slot (pipeline.yml: "17 */2 * * *"): fills in only
 # when that run was dropped.
 # The half-hour slots start fires-only runs, but only with FAST = "1".
-crons = ["47 */2 * * *", "7,37 * * * *"]
+crons = ["2,32 * * * *", "7,37 * * * *"]
 
 [vars]
 REPO = "pantaukarhutla/pantau-karhutla"

@@ -9,7 +9,7 @@
 // ~3,000 Actions minutes a month: off by default (docs/deploy.md).
 // Setup: docs/deploy.md, section 4.
 
-const QUIET_MIN = 100; // full run: only if nothing ran for this long
+const QUIET_MIN = 40; // full run: only if nothing ran for this long (pipeline.yml runs every 30 min)
 const FAST_QUIET_MIN = 25; // fires-only run: only if nothing ran for this long
 const FAST_CRON = "7,37 * * * *";
 

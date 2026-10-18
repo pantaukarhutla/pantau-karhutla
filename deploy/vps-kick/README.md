@@ -17,10 +17,9 @@ dispatches when nothing ran in the last 100 minutes (25 for fires-only).
 3. `crontab -e`:
 
    ```cron
-   # 30 min after GitHub's slots (pipeline.yml runs at :17 every 2 h)
-   47 */2 * * *  /usr/local/bin/haze-kick       >> /var/log/haze-kick.log 2>&1
-   # Fires every 30 min (public repository: no minute limit)
-   7,37 * * * *  /usr/local/bin/haze-kick fast  >> /var/log/haze-kick.log 2>&1
+   # pipeline.yml runs at :17 and :47; 15 min later, start one if GitHub
+   # skipped it (nothing ran for 40 min)
+   2,32 * * * *  QUIET_MIN=40 /usr/local/bin/haze-kick  >> /var/log/haze-kick.log 2>&1
    ```
 
 Use either this or the Worker, not both (both are safe together, but one

@@ -6,14 +6,10 @@ name: pipeline
 
 on:
   schedule:
-    # Every 2 hours while the repo is private (a run is ~3 min, ~1,100 of the
-    # 2,000 free private minutes a month; docs/deploy.md). Public repos have
-    # no minute limit: go to every 30 min once public.
-    - cron: "17 */2 * * *"
-    # Backup slot: GitHub's schedule is best-effort and dropped the 06:17 and
-    # 08:17 runs on 18 Oct 2026. At :47 the gate job below runs the pipeline
-    # only if nothing ran in the last 100 min; otherwise it stops in seconds.
-    - cron: "47 */2 * * *"
+    # Every 30 min (a public repo has no Actions minute limit). GitHub's
+    # schedule is best-effort and drops runs; deploy/vps-kick (or
+    # deploy/cron-worker) starts one when nothing ran for 100 min.
+    - cron: "17,47 * * * *"
   workflow_dispatch:
     inputs:
       fast:
@@ -40,31 +36,7 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  # Only in the backup slot: did the :17 run happen?
-  gate:
-    if: github.event.schedule == '47 */2 * * *'
-    runs-on: ubuntu-latest
-    timeout-minutes: 3
-    permissions:
-      actions: read
-    outputs:
-      go: ${{ steps.check.outputs.go }}
-    steps:
-      - id: check
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          last=$(gh run list -R "$GITHUB_REPOSITORY" --workflow pipeline.yml --limit 5 --json databaseId,createdAt \
-            --jq "[.[] | select(.databaseId != ${{ github.run_id }})][0].createdAt // empty")
-          age=$(( ($(date +%s) - $(date -d "${last:-1970-01-01T00:00:00Z}" +%s)) / 60 ))
-          echo "last pipeline run: ${last:-none} (${age} min ago)"
-          echo "go=$([ "$age" -ge 100 ] && echo true || echo false)" >> "$GITHUB_OUTPUT"
-
   run:
-    needs: gate
-    # Runs unless the backup slot's gate found a recent run (a skipped or
-    # failed gate never blocks the pipeline).
-    if: always() && !(needs.gate.result == 'success' && needs.gate.outputs.go == 'false')
     runs-on: ubuntu-latest
     # A cold start backfills the whole season from the API (~300 calls); a
     # manual backfill also refills DEA and station history and rewrites every page.

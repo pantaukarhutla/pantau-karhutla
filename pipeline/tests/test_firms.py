@@ -105,7 +105,7 @@ def test_empty_responses_are_typed(monkeypatch):
 
 
 def test_keyless_survives_one_satellite_going_away():
-    """S-NPP deliveries end on 1 Nov 2026: its file failing must not stop the
+    """S-NPP observations end on 2 Nov 2026: its file failing must not stop the
     fire update, but every file failing must."""
     csv = raw_viirs([(-1, 110, "2026-09-01", "0612", "h", 9.0)]).to_csv(index=False)
 

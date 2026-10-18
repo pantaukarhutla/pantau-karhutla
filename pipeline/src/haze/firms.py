@@ -259,7 +259,7 @@ def fetch_keyless(period: str = "48h", client: httpx.Client | None = None) -> pd
 
 def _each_source(sources, fetch) -> pd.DataFrame:
     """Detections from every source that answers. One satellite's feed going
-    away (S-NPP deliveries end on 1 Nov 2026) or failing for a run must not
+    away (S-NPP observations end on 2 Nov 2026) or failing for a run must not
     stop the fire update; only all of them failing does."""
     frames, failed = [], []
     for source in sources:

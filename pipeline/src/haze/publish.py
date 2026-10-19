@@ -299,7 +299,8 @@ def recent_hotspots(
     stamp = now.strftime("%Y-%m-%dT%H:%MZ")
     recent = df[df.age_h < hours]
     for name, part in (("hotspots_recent.json", recent), ("hotspots_replay.json", df)):
-        write_json(out / "events" / name, {"generated_at": stamp, "columns": list(part.columns), "rows": part.to_numpy().tolist()})
+        body = {"generated_at": stamp, "columns": list(part.columns), "rows": part.to_numpy().tolist()}
+        write_json(out / "events" / name, body)
     return len(recent)
 
 

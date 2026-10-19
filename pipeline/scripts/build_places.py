@@ -54,8 +54,22 @@ for r in desa.itertuples():
     out["d"].append([r.desa, ci[(r.provinsi, r.kabupaten, r.kecamatan)], round(r.lon, 3), round(r.lat, 3)])
 
 # GeoNames feature code -> short type the web app labels (PlaceSearch.tsx s.placeFeature).
-FEATURES = {"T.MT": "mt", "T.PK": "mt", "T.MTS": "mts", "T.VLC": "vlc", "T.HLL": "hll", "H.LK": "lk", "H.LKS": "lk",
-            "T.ISL": "isl", "T.ISLS": "isls", "H.BAY": "bay", "L.PRK": "prk", "L.RESN": "prk", "L.RESF": "prk", "S.AIRP": "airp"}
+FEATURES = {
+    "T.MT": "mt",
+    "T.PK": "mt",
+    "T.MTS": "mts",
+    "T.VLC": "vlc",
+    "T.HLL": "hll",
+    "H.LK": "lk",
+    "H.LKS": "lk",
+    "T.ISL": "isl",
+    "T.ISLS": "isls",
+    "H.BAY": "bay",
+    "L.PRK": "prk",
+    "L.RESN": "prk",
+    "L.RESF": "prk",
+    "S.AIRP": "airp",
+}
 # Points farther than this from any village (degrees, ~30 km) are at sea or misplaced.
 MAX_DEG = 0.27
 zpath = CACHE_DIR / "geonames" / "ID.zip"
@@ -63,8 +77,16 @@ if not zpath.exists():
     zpath.parent.mkdir(parents=True, exist_ok=True)
     zpath.write_bytes(httpx.get("https://download.geonames.org/export/dump/ID.zip", timeout=300).content)
 with zipfile.ZipFile(zpath) as z:
-    gn = pd.read_csv(io.BytesIO(z.read("ID.txt")), sep="\t", header=None, usecols=[1, 4, 5, 6, 7],
-                     names=["name", "lat", "lon", "fclass", "fcode"], dtype={"name": str}, quoting=3, keep_default_na=False)
+    gn = pd.read_csv(
+        io.BytesIO(z.read("ID.txt")),
+        sep="\t",
+        header=None,
+        usecols=[1, 4, 5, 6, 7],
+        names=["name", "lat", "lon", "fclass", "fcode"],
+        dtype={"name": str},
+        quoting=3,
+        keep_default_na=False,
+    )
 gn["type"] = (gn.fclass + "." + gn.fcode).map(FEATURES)
 gn = gn.dropna(subset=["type"])
 dist, nearest = cKDTree(desa[["lon", "lat"]].to_numpy()).query(gn[["lon", "lat"]].to_numpy())

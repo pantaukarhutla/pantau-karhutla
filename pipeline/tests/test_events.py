@@ -150,6 +150,10 @@ def test_recent_hotspots_file(con, tagger, tmp_path):
     # FIRE_A's 09-08 06:00 point is 54 h old; low-confidence NOISE is excluded.
     assert n == 1 and data["columns"] == ["lon", "lat", "frp", "age_h"]
     assert data["rows"][0][3] == 6.0
+    # The slider's replay file reaches 96 h back: the 54 h and 78 h points are in it (low confidence still out).
+    replay = pd.read_json(tmp_path / "events" / "hotspots_replay.json", typ="series")
+    assert sorted(r[3] for r in replay["rows"]) == [6.0, 54.0, 78.0]
+    assert replay["generated_at"] == data["generated_at"]
 
 
 def test_tables_regions_and_fires(con, tagger, tmp_path):

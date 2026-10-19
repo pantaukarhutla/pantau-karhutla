@@ -109,6 +109,23 @@ export const loadDanger = () => tryJson<Danger>("danger.json");
 export const loadOutlook = () => tryJson<Outlook>("outlook.json");
 export const loadFireHistory = () => tryJson<FireHistory>("fire_history.json");
 export const loadSpread = (id: string) => tryJson<SpreadForecast>(`spread/${id}.json`);
+/** Older spread forecasts are not shown (the pipeline refreshes them every run). */
+export const SPREAD_MAX_AGE_H = 12;
+
+/** Every current spread forecast (the most active fires) merged into one for the time
+ *  slider's future: day d holds all fires' reach bands for that day. */
+export async function loadAllSpread(): Promise<SpreadForecast | null> {
+  const idx = await tryJson<{ generated_at: string; events: { id: string }[] }>("spread/index.json");
+  if (!idx || Date.now() - Date.parse(idx.generated_at) > SPREAD_MAX_AGE_H * 3_600_000) return null;
+  const all = (await Promise.all(idx.events.map((e) => loadSpread(e.id)))).filter((f): f is SpreadForecast => f !== null);
+  if (!all.length) return null;
+  const days = [0, 1, 2].map((d) => ({
+    day: d + 1,
+    new_area_ha: all.reduce((sum, f) => sum + (f.days[d]?.new_area_ha ?? 0), 0),
+    reach: all.flatMap((f) => f.days[d]?.reach ?? []),
+  }));
+  return { id: "all", t0: idx.generated_at, weather: [], days };
+}
 export const loadAlerts = () => tryJson<Alerts>("alerts.json");
 
 /** Fire years per 0.01 deg cell, decoded from the grayscale PNG (north-up)

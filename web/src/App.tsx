@@ -1,5 +1,5 @@
 import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { dangerDayAt } from "./api/fire";
+import { dangerDayAt, loadAllSpread } from "./api/fire";
 import { Dashboard, FireStats, Sources } from "./Dashboard";
 import { EventPanel } from "./EventPanel";
 import { MapView, type Focus, type LayerToggles } from "./MapView";
@@ -23,6 +23,7 @@ import { usePersistentState } from "./hooks/usePersistentState";
 import { usePlace } from "./hooks/usePlace";
 import { useSelectedEvent, useSmokeOutlook } from "./hooks/useSelectedEvent";
 import { loadPlumes } from "./api/air";
+import { hotspotsAt, loadReplayHotspots } from "./api/events";
 import { useAodDate } from "./hooks/useAodDate";
 import { useHimawariTime } from "./hooks/useHimawariTime";
 import { useAfterFirstPaint, useBurnGrid, useOnDemand, useStaticData, type StaticData } from "./hooks/useStaticData";
@@ -133,13 +134,29 @@ export default function App() {
   const painted = useAfterFirstPaint();
   const plumes = useOnDemand(loadPlumes, layers.plumes && painted);
   const forecast = useForecastTimeline(data.smog, plumes, data.wind, !history);
+  // Slider in the past: the fires as they were then (96 h file, loaded on first use).
+  const replayWanted = !history && forecast.time < Date.now() - 90 * 60_000;
+  const replay = useOnDemand(loadReplayHotspots, replayWanted);
+  const hotspots = useMemo(
+    () => (history ? history.fires : replayWanted && replay ? hotspotsAt(replay, forecast.time) : data.hotspots),
+    [history, replayWanted, replay, forecast.time, data.hotspots],
+  );
   const sel = useSelectedEvent(eventId, data.dash, data.events);
   const selected = sel.event;
   const smoke = useSmokeOutlook(selected, data.wind, data.cities, !history);
+  // Slider in the future: every forecast fire's spread bands for that day (an estimate),
+  // unless one fire is open (its own panel then drives the bands).
+  const future = !history && forecast.time > Date.now() + 90 * 60_000;
+  const spreadAll = useOnDemand(loadAllSpread, future);
+  const showAllSpread = future && !selected && spreadAll !== null;
+  const spreadAllDay = spreadAll ? Math.min(2, Math.max(0, Math.ceil((forecast.time - Date.parse(spreadAll.t0)) / 86_400_000) - 1)) : 0;
 
   // Danger day = the WIB date of the forecast slider (tomorrow if none).
   const dangerDay = useMemo(() => dangerDayAt(data.danger, forecast.time), [data.danger, forecast.time]);
-  const mapLayers = useMemo(() => (history ? { ...layers, ...PAST_DAY_OFF } : layers), [history, layers]);
+  const mapLayers = useMemo(
+    () => (history ? { ...layers, ...PAST_DAY_OFF } : showAllSpread ? { ...layers, spread: true } : layers),
+    [history, layers, showAllSpread],
+  );
   const progLabels = useMemo(() => ({ ignition: s.progIgnition, jump: s.progJump, compass: s.compassShort }), [s]);
   const smokePath = useMemo(
     () => {
@@ -191,7 +208,7 @@ export default function App() {
         burnHistory={burnGrid}
         stations={data.stations?.stations ?? []}
         events={history ? [] : data.events}
-        hotspots={history ? history.fires : data.hotspots}
+        hotspots={hotspots}
         historyMode={history !== null}
         progression={selected ? sel.progression : null}
         lang={lang}
@@ -205,8 +222,9 @@ export default function App() {
             : forecast.time
         }
         selected={selected}
-        spread={sel.spread}
-        spreadDay={sel.spreadDay}
+        spread={showAllSpread ? spreadAll : sel.spread}
+        spreadDay={showAllSpread ? spreadAllDay : sel.spreadDay}
+        thinSmoke={showAllSpread}
         dayIndex={sel.timeline.index}
         is3d={is3d}
         layers={mapLayers}
@@ -404,7 +422,7 @@ export default function App() {
         layers={layers}
         is3d={is3d}
         live={mode === "live"}
-        hasSpread={sel.spread !== null}
+        hasSpread={showAllSpread || sel.spread !== null}
         burnYears={data.fireHistory?.history_years ?? null}
         aodDate={aodDate}
         himawariTime={himawariTime}

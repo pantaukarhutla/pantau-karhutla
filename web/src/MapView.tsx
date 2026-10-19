@@ -51,6 +51,8 @@ interface Props {
   hotspots: HotspotRow[];
   selected: EventPage | null;
   spread: SpreadForecast | null;
+  /** the slider shows every fire's spread: thin the smoke so the bands read */
+  thinSmoke?: boolean;
   spreadDay: number;
   dayIndex: number;
   is3d: boolean;
@@ -287,15 +289,17 @@ export function MapView(props: Props) {
     [layers, is3d, historyMode, animate, has.risk, has.burnHistory, has.smog, has.plumes, has.wind, plumeFrame >= 0],
   );
 
-  // With a fire selected, thin the smoke so its footprint and spread bands read.
+  // With a fire selected, or every fire's spread on the slider, thin the smoke so the
+  // footprint and spread bands read.
+  const thin = !!selected || !!props.thinSmoke;
   useOnMap(
     handle,
     (h) => {
       fxState.emberOn = !!selected;
-      h.smog.setOpacity(selected ? 0.25 : SMOG_OPACITY);
-      h.plume.setOpacity(selected ? 0.2 : PLUME_OPACITY);
+      h.smog.setOpacity(thin ? 0.25 : SMOG_OPACITY);
+      h.plume.setOpacity(thin ? 0.2 : PLUME_OPACITY);
     },
-    [selected],
+    [selected, thin],
   );
 
   // Columns: rebuilt when the data, the selection or the zoom band changes.

@@ -165,6 +165,27 @@ export type HotspotRow = [number, number, number, number];
 export const loadRecentHotspots = async (): Promise<HotspotRow[]> =>
   (await tryJson<{ rows: HotspotRow[] }>("events/hotspots_recent.json"))?.rows ?? [];
 
+/** Detections of the last 96 h for the time slider's past; ages count from `at` (ms). */
+export interface Replay {
+  at: number;
+  rows: HotspotRow[];
+}
+export const loadReplayHotspots = async (): Promise<Replay | null> => {
+  const f = await tryJson<{ generated_at?: string; rows: HotspotRow[] }>("events/hotspots_replay.json");
+  return f?.generated_at ? { at: Date.parse(f.generated_at), rows: f.rows } : null;
+};
+
+/** The map's fires at a past time `t` (ms): the detections of the 48 h before it, aged
+ *  from `t`, the same window the live map shows. */
+export function hotspotsAt(r: Replay, t: number): HotspotRow[] {
+  const out: HotspotRow[] = [];
+  for (const [lon, lat, frp, age] of r.rows) {
+    const h = (t - (r.at - age * 3_600_000)) / 3_600_000;
+    if (h >= 0 && h < 48) out.push([lon, lat, frp, Math.round(h * 10) / 10]);
+  }
+  return out;
+}
+
 export type ProgressionEventType = "ignition" | "rapid_growth" | "jump" | "stall";
 export type ProgressionEvent =
   | { type: "ignition"; t: string; lon: number; lat: number; value?: number }

@@ -3,13 +3,10 @@
 import { useEffect, useMemo, useState } from "react";
 import type { CityOutlook, Wind } from "../api/air";
 import { loadEvent, loadProgression, type Dashboard, type EventPage, type LiveEvent, type Progression } from "../api/events";
-import { loadSpread, type SpreadForecast } from "../api/fire";
+import { loadSpread, SPREAD_MAX_AGE_H, type SpreadForecast } from "../api/fire";
 import { wibDate } from "../format";
 import { smokeOutlook, type SmokeOutlook } from "../trajectory";
 import { usePlayback, type Playback } from "./usePlayback";
-
-/** Older spread forecasts are not shown (the pipeline refreshes them every run, ~2 h). */
-const SPREAD_MAX_AGE_H = 12;
 
 export interface SelectedEvent {
   event: EventPage | null;

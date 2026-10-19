@@ -10,6 +10,8 @@ import { compassIndex } from "./geo";
 import type { SmokeOutlook } from "./trajectory";
 import { fmtDate, fmtDay, fmtHa, fmtInt, fmtNum, fmtPct, wibDate } from "./format";
 import type { Lang, Strings } from "./i18n";
+import { useEffect, useState } from "react";
+import { landmarkName, loadPlaces, nearestLandmark } from "./PlaceSearch";
 
 /** Share of quiet fires seen again on the same ~1.6 km cells within 7 days,
  * Jul-Sep 2026 (pipeline/scripts/backtest_fire_status.py): cooling = quiet 24 h,
@@ -76,6 +78,7 @@ export function EventPanel({
           <div className="muted">
             {event.kabupaten} · {event.provinsi}
           </div>
+          <Landmark lon={event.centroid[0]} lat={event.centroid[1]} lang={lang} s={s} />
         </div>
         <button className="close" onClick={onClose} aria-label={s.close}>
           ×
@@ -395,3 +398,21 @@ function ProgressionSection({ p, lang, s, onLook }: { p: Progression; lang: Lang
   );
 }
 
+/** "Dekat Gunung X (±3 km)" under the fire's name, from the place index.
+ *  ponytail: loads places.json (~1.5 MB gz) on the first fire opened; write the landmark
+ *  into the event pages in the pipeline if that becomes a cost. */
+function Landmark({ lon, lat, lang, s }: { lon: number; lat: number; lang: Lang; s: Strings }) {
+  const [text, setText] = useState<string | null>(null);
+  useEffect(() => {
+    let live = true;
+    setText(null);
+    loadPlaces().then((pl) => {
+      const lm = pl && nearestLandmark(pl, lon, lat);
+      if (live && lm) setText(s.nearFeature(landmarkName(lm.name, lm.type, s), fmtNum(lm.km, lang, lm.km < 10 ? 1 : 0)));
+    });
+    return () => {
+      live = false;
+    };
+  }, [lon, lat, lang, s]);
+  return text ? <div className="muted">{text}</div> : null;
+}

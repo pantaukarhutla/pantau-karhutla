@@ -277,9 +277,14 @@ def publish_season(
     return written
 
 
-def recent_hotspots(con: duckdb.DuckDBPyConnection, now: datetime, out: Path = PUBLIC_DIR, hours: int = 48) -> int:
-    """Individual detections of the last `hours` (the map's fire glow and flames):
-    columnar [lon, lat, frp_mw, age_h, active_event]."""
+def recent_hotspots(
+    con: duckdb.DuckDBPyConnection, now: datetime, out: Path = PUBLIC_DIR, hours: int = 48, replay_hours: int = 96
+) -> int:
+    """Individual detections, columnar [lon, lat, frp_mw, age_h]: the last `hours`
+    for the map's fire glow and flames (hotspots_recent.json, loaded at start), and
+    the last `replay_hours` for the time slider's past (hotspots_replay.json, loaded
+    only when the slider goes back; 96 h keeps a full day behind its -72 h end).
+    `generated_at` is the time the ages count from."""
     df = con.execute(
         f"""
         SELECT round(lon, 4) AS lon, round(lat, 4) AS lat, round(coalesce(frp_mw, 1), 1) AS frp,
@@ -289,10 +294,13 @@ def recent_hotspots(con: duckdb.DuckDBPyConnection, now: datetime, out: Path = P
           AND {PUBLIC}
         ORDER BY acq_time
         """,
-        [now, now, hours, now],
+        [now, now, max(hours, replay_hours), now],
     ).df()
-    write_json(out / "events" / "hotspots_recent.json", {"columns": list(df.columns), "rows": df.to_numpy().tolist()})
-    return len(df)
+    stamp = now.strftime("%Y-%m-%dT%H:%MZ")
+    recent = df[df.age_h < hours]
+    for name, part in (("hotspots_recent.json", recent), ("hotspots_replay.json", df)):
+        write_json(out / "events" / name, {"generated_at": stamp, "columns": list(part.columns), "rows": part.to_numpy().tolist()})
+    return len(recent)
 
 
 def daily_counts(con: duckdb.DuckDBPyConnection, season: int) -> pd.DataFrame:

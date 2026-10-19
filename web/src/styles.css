@@ -60,7 +60,7 @@ small { color: var(--muted); font-size: var(--text-sm); }
 .mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: var(--text-sm); }
 .note { color: var(--muted); font-size: var(--text-sm); margin: 6px 0 0; }
 
-.app { position: relative; height: 100%; }
+.app { position: relative; height: 100%; overflow: hidden; } /* nothing may widen the page: a phone browser would shift or zoom the whole view */
 .map { position: absolute; inset: 0; }
 
 .topbar, .sidebar, .panel, .legend, .forecast-bar, .layer-panel { z-index: var(--z-chrome); }
@@ -560,3 +560,8 @@ h3.sub { font-size: 11.5px; color: var(--ink-2); font-weight: 600; margin: 10px 
   .maplibregl-ctrl-top-right { top: var(--top-h); }
 }
 .freshness .pass-line { flex-basis: 100%; padding-left: 14px; font-size: var(--text-sm); }
+/* Narrow phones (< 360 px): the slider label shrinks with ellipsis instead of pushing
+   the bar off-screen, and a too-wide table scrolls inside its card. */
+.forecast-bar input { min-width: 0; }
+.forecast-label { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.card-body:has(> table.cities) { overflow-x: auto; }

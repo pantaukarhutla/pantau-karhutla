@@ -8,6 +8,8 @@ const CLICKABLE = ["columns", "glow"];
 /** The flames and glow drawn at every detection: no id, so a tap opens the nearest fire. */
 const FLAMES = ["fire-glow", "fire-core"];
 const HOVER_TIPS = ["columns", "glow", "stations-dot", "early-ring", "kab-fill-hit", "peat-fill"];
+/** Point marks that are not fires: a tap on one shows its tip instead of opening a nearby fire. */
+const POINT_TIPS = ["stations-dot", "early-ring"];
 /** Tap margin around the pointer (px): about a fingertip on phones. */
 const TAP_PX = 10;
 /** A flame opens a fire whose centre is at most this far away. */
@@ -30,12 +32,24 @@ function nearestFire(map: maplibregl.Map, at: maplibregl.LngLat): string | null 
  * latest callback is used without re-binding. */
 export function bindInteractions(map: maplibregl.Map, onSelect: () => (id: string) => void) {
   const shown = (layers: string[]) => layers.filter((l) => map.getLayer(l));
+  // One popup for every tooltip layer, showing the topmost feature: per-layer handlers
+  // let whichever fired last win, so a regency's name covered a station or a signal.
+  const popup = new maplibregl.Popup({ closeButton: false, closeOnClick: false, className: "map-tip" });
+  const showTip = (f: maplibregl.MapGeoJSONFeature | undefined, at: maplibregl.LngLat) => {
+    const p = f?.properties;
+    if (!f || !p) return void popup.remove();
+    const text = p.tip ?? (p.provinsi ? `${p.name}, ${p.provinsi}` : f.layer.id === "peat-fill" ? `KHG ${p.name}` : p.name);
+    popup.setLngLat(at).setText(String(text)).addTo(map);
+  };
   map.on("click", (e) => {
     const { x, y } = e.point;
     const box: [maplibregl.PointLike, maplibregl.PointLike] = [
       [x - TAP_PX, y - TAP_PX],
       [x + TAP_PX, y + TAP_PX],
     ];
+    // A station or an early signal right under the finger: phones have no hover, so tap shows its tip.
+    const point = map.queryRenderedFeatures(e.point, { layers: shown(POINT_TIPS) })[0];
+    if (point) return showTip(point, e.lngLat);
     const own = map.queryRenderedFeatures(box, { layers: shown(CLICKABLE) })[0]?.properties?.id as string | undefined;
     const id = own ?? (map.queryRenderedFeatures(box, { layers: shown(FLAMES) }).length ? nearestFire(map, e.lngLat) : null);
     if (id) onSelect()(id);
@@ -44,16 +58,7 @@ export function bindInteractions(map: maplibregl.Map, onSelect: () => (id: strin
     map.on("mouseenter", layer, () => (map.getCanvas().style.cursor = "pointer"));
     map.on("mouseleave", layer, () => (map.getCanvas().style.cursor = ""));
   }
-  // One handler for every tooltip layer, showing the topmost feature: per-layer handlers
-  // let whichever fired last win, so a regency's name covered a station or a signal.
-  const popup = new maplibregl.Popup({ closeButton: false, closeOnClick: false, className: "map-tip" });
-  map.on("mousemove", (e) => {
-    const f = map.queryRenderedFeatures(e.point, { layers: shown(HOVER_TIPS) })[0];
-    const p = f?.properties;
-    if (!p) return void popup.remove();
-    const text = p.tip ?? (p.provinsi ? `${p.name}, ${p.provinsi}` : f.layer.id === "peat-fill" ? `KHG ${p.name}` : p.name);
-    popup.setLngLat(e.lngLat).setText(String(text)).addTo(map);
-  });
+  map.on("mousemove", (e) => showTip(map.queryRenderedFeatures(e.point, { layers: shown(HOVER_TIPS) })[0], e.lngLat));
   map.getCanvas().addEventListener("mouseleave", () => popup.remove());
 }
 

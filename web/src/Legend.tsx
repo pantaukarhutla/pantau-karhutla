@@ -119,6 +119,9 @@ export function Legend({
         </div>
       )}
       {layers.flames && is3d && live && <div className="legend-note">{s.illustration}</div>}
+      <div className="legend-source">
+        {s.legendSource} <MethodLink id="hotspots" s={s} />
+      </div>
     </div>
   );
 }

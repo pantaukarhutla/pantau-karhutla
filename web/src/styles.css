@@ -338,6 +338,7 @@ h3.sub { font-size: 11.5px; color: var(--ink-2); font-weight: 600; margin: 10px 
 .area-range { font-size: var(--figure); font-weight: 700; letter-spacing: -0.01em; }
 .h24 .facts dd { text-align: right; font-variant-numeric: tabular-nums; }
 .disclaimer { color: var(--ink-2); border-top: 1px solid var(--border); padding-top: var(--space-2); }
+.legend-source { max-width: 210px; font-size: var(--text-xs); color: var(--muted); line-height: 1.35; }
 .legend-note { max-width: 210px; font-size: var(--text-xs); color: var(--muted); line-height: 1.35; border-top: 1px solid var(--border); padding-top: var(--space-1); margin-top: 2px; }
 .risk-legend { display: flex; flex-wrap: wrap; gap: 4px 10px; font-size: var(--text-sm); border-top: 1px solid var(--border); padding-top: var(--space-1); }
 .validation { border-left: 2px solid var(--accent); padding-left: var(--space-2); }

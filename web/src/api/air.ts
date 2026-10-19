@@ -62,7 +62,7 @@ export interface Cities {
 }
 
 export interface Station {
-  network: "ISPU" | "DOE" | "NEA";
+  network: "ISPU" | "DOE" | "NEA" | "BMKG";
   id: string;
   name: string;
   region: string | null;

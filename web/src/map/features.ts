@@ -46,7 +46,8 @@ export const eventFeatures = (events: LiveEvent[]): Features =>
 export const hotspotFeatures = (hotspots: HotspotRow[]): Features =>
   hotspots.map(([lon, lat, frp, age], i) => point(lon, lat, { frp, age, variant: i % 3 }));
 
-export function stationFeatures(stations: Station[], pm: string): Features {
+/** `hours`: the averaging period label, "1" or "24" + unit; ISPU and DOE report 24 h means, BMKG and NEA hourly values. */
+export function stationFeatures(stations: Station[], pm: string, hours: (h: 1 | 24) => string): Features {
   return stations.flatMap((st) => {
     if (st.pm25 === null) return [];
     const v = `${st.estimated ? "≈" : ""}${Math.round(st.pm25)}`;
@@ -57,7 +58,7 @@ export function stationFeatures(stations: Station[], pm: string): Features {
         label: v,
         // Close in, say what the number is.
         label_long: `${pm} ${v} µg/m³`,
-        tip: `${st.name} · ${pm} ${v} µg/m³${st.cams !== null ? ` (CAMS ${Math.round(st.cams)})` : ""}`,
+        tip: `${st.name} · ${pm} ${v} µg/m³, ${hours(st.network === "BMKG" || st.network === "NEA" ? 1 : 24)}${st.cams !== null ? ` (CAMS ${Math.round(st.cams)})` : ""}`,
         stale: st.stale,
       }),
     ];

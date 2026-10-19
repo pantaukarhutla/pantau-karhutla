@@ -132,7 +132,7 @@ export function MapView(props: Props) {
   useOnMap(handle, ({ map }) => setData(map, "events", eventFeatures(props.events)), [props.events]);
   useOnMap(handle, ({ map }) => setData(map, "hotspots", hotspotFeatures(props.hotspots)), [props.hotspots]);
   useOnMap(handle, ({ map }) => setData(map, "early", props.early), [props.early]);
-  useOnMap(handle, ({ map }) => setData(map, "stations", stationFeatures(props.stations, props.lang === "id" ? "PM2,5" : "PM2.5")), [props.stations, props.lang]);
+  useOnMap(handle, ({ map }) => setData(map, "stations", stationFeatures(props.stations, props.lang === "id" ? "PM2,5" : "PM2.5", (h) => (props.lang === "id" ? `rata-rata ${h} jam` : `${h} h mean`))), [props.stations, props.lang]);
   useOnMap(handle, ({ map }) => setData(map, "footprints", footprintFeatures(selected, props.dayIndex)), [selected, props.dayIndex]);
   useOnMap(handle, ({ map }) => setData(map, "spread", spreadFeatures(props.spread, props.spreadDay)), [props.spread, props.spreadDay]);
   useOnMap(

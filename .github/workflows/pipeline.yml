@@ -47,6 +47,9 @@ jobs:
       JAXA_FTP_HOST: ftp.ptree.jaxa.jp
       JAXA_FTP_USER: ${{ secrets.JAXA_FTP_USER }}
       JAXA_FTP_PASS: ${{ secrets.JAXA_FTP_PASS }}
+      # BMKG PM2.5 (haze.stations) is read through Cloudflare Browser Run (~1.3 browser-s a run).
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
       HAZE_DATA_DIR: ${{ github.workspace }}/data
       # public/ sits inside the cached dir so unchanged files keep their
       # mtimes and the R2 sync uploads only what changed.

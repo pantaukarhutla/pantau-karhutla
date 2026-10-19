@@ -1,6 +1,8 @@
 from datetime import UTC, datetime
+from pathlib import Path
 
 import numpy as np
+import pandas as pd
 
 from haze import cams_correction, db, stations
 from haze.geo import Grid
@@ -78,3 +80,22 @@ def test_correction_field_scales_near_stations_only(tmp_path):
     assert np.allclose(corrected[:, 4, 4], 400.0) and np.allclose(corrected[:, 0, 11], 100.0)
     out = stations.publish(con, now, tmp_path, cache_dir=tmp_path)
     assert out["stations"][0]["pm25"] == 400.0
+
+
+BMKG_PAGE = (Path(__file__).parent / "bmkg_pm25_page.html").read_text()
+
+
+def test_parse_bmkg_overview_page():
+    """The real page of 19 Oct 2026, 11.00 WIB: 26 stations, hourly values, WIB hour -> UTC."""
+    df = stations.parse_bmkg(BMKG_PAGE, datetime(2026, 10, 19, 5, 30, tzinfo=UTC))  # 12.30 WIB
+    assert len(df) == 26 and set(df.network) == {"BMKG"}
+    pkn = df[df.station_id == "BMKG-pkn2"].iloc[0]
+    assert pkn["name"] == "Pangkalanbun (BMKG)" and pkn.pm25 == 556.4
+    assert (pkn.lat, pkn.lon) == (-2.704, 111.676)
+    assert pkn.ts_utc == pd.Timestamp("2026-10-19T04:00Z")  # 11.00 WIB
+
+
+def test_parse_bmkg_hour_after_now_is_yesterday():
+    # Just after midnight WIB the page still shows 23.00 of the day before.
+    df = stations.parse_bmkg(BMKG_PAGE, datetime(2026, 10, 19, 17, 30, tzinfo=UTC))  # 00.30 WIB, 20 Oct
+    assert df.iloc[0].ts_utc == pd.Timestamp("2026-10-19T04:00Z")  # 11.00 WIB on 19 Oct, not 20 Oct

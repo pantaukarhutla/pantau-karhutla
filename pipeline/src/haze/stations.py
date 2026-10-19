@@ -6,6 +6,12 @@
   index per station; no raw PM2.5, so PM2.5 is estimated by inverting the
   DOE PM2.5 table (flagged `estimated`).
 - Singapore NEA (data.gov.sg): hourly PM2.5 per region.
+- BMKG (Indonesia's met agency): ~26 stations with hourly PM2.5, the latest hour
+  on one page (bmkg.go.id/kualitas-udara/pm25) behind a bot check, so it is read
+  through Cloudflare Browser Run (~1.3 browser-seconds a call; needs
+  CLOUDFLARE_ACCOUNT_ID / CLOUDFLARE_API_TOKEN). Hourly, unlike ISPU's 24 h mean:
+  on 19 Oct 2026 BMKG Pangkalanbun read 500-1,050 µg/m³ every hour while the
+  nearest ISPU station's 24 h mean was 54.
 
 Each run upserts readings into `obs_aq` and publishes `stations.json`
 (latest reading + 72 h history per station) with a CAMS comparison, since
@@ -14,9 +20,12 @@ CAMS is known to run low in peat haze (Grosvenor et al. 2024).
 
 from __future__ import annotations
 
+import json
 import logging
+import os
+import re
 import time
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 import duckdb
@@ -34,6 +43,8 @@ log = logging.getLogger(__name__)
 ISPU_URL = "https://ispu.kemenlh.go.id/apimobile/v1/getStations"
 DOE_URL = "https://eqms.doe.gov.my/api3/publicportalapims/apitablehourly"
 NEA_URL = "https://api-open.data.gov.sg/v2/real-time/api/pm25"
+BMKG_URL = "https://www.bmkg.go.id/kualitas-udara/pm25"
+BROWSER_RUN = "https://api.cloudflare.com/client/v4/accounts/{account}/browser-rendering/content"
 # States with haze-relevant stations: Johor, Selangor, Sabah, Sarawak, KL, Labuan.
 DOE_STATES = (1, 10, 12, 13, 14, 16)
 
@@ -174,6 +185,59 @@ def parse_nea(payload: dict) -> pd.DataFrame:
     return pd.DataFrame(rows)
 
 
+def parse_bmkg(html: str, now: datetime) -> pd.DataFrame:
+    """The BMKG overview page's Nuxt payload: per station file, name, hour (WIB),
+    PM2.5, category, lat, lon. The page carries no date: the hour is today's in
+    WIB, or yesterday's if it is later than the current WIB hour (just after midnight)."""
+    m = re.search(r'<script[^>]*id="__NUXT_DATA__"[^>]*>(.*?)</script>', html, re.S)
+    if not m:
+        raise ValueError("BMKG page without its data payload")
+    data = json.loads(m.group(1))
+    wib = pd.Timestamp(now).tz_convert("Asia/Jakarta")
+    rows = []
+    for d in data:
+        if not (isinstance(d, dict) and "nama_file" in d):
+            continue
+        st = {k: data[v] for k, v in d.items()}
+        pm, hour = _num(st.get("PM25")), int(st["JAM"])
+        if pm is None:
+            continue
+        day = wib.normalize() - pd.Timedelta(days=1 if hour > wib.hour else 0)
+        rows.append(
+            {
+                "network": "BMKG",
+                "station_id": "BMKG-" + str(st["nama_file"]).removeprefix("pm25_").removesuffix(".xml"),
+                "name": f"{st['LOKASI']} (BMKG)",
+                "region": None,
+                "lat": float(st["LAT"]),
+                "lon": float(st["LON"]),
+                "ts_utc": (day + pd.Timedelta(hours=hour)).tz_convert("UTC"),
+                "pm25": pm,
+                "pm25_estimated": False,
+                "index_value": None,
+                "index_kind": "none",
+            }
+        )
+    return pd.DataFrame(rows)
+
+
+def fetch_bmkg(client: httpx.Client) -> str:
+    """The overview page rendered by Cloudflare Browser Run (BMKG blocks plain HTTP clients).
+    Images, fonts and styles are skipped: the data is in the server-rendered HTML."""
+    r = client.post(
+        BROWSER_RUN.format(account=os.environ["CLOUDFLARE_ACCOUNT_ID"]),
+        headers={"Authorization": f"Bearer {os.environ['CLOUDFLARE_API_TOKEN']}"},
+        json={
+            "url": BMKG_URL,
+            "gotoOptions": {"waitUntil": "domcontentloaded", "timeout": 30000},
+            "rejectResourceTypes": ["image", "font", "stylesheet", "media"],
+        },
+        timeout=90.0,
+    ).raise_for_status()
+    log.info("BMKG via Browser Run: %s browser-ms", r.headers.get("x-browser-ms-used"))
+    return r.json()["result"]
+
+
 def fetch_all(client: httpx.Client) -> pd.DataFrame:
     """Every network is optional: one outage must not lose the others."""
     frames = []
@@ -198,6 +262,8 @@ def fetch_all(client: httpx.Client) -> pd.DataFrame:
 
     attempt("DOE", doe)
     attempt("NEA", lambda: parse_nea(client.get(NEA_URL).raise_for_status().json()))
+    if os.environ.get("CLOUDFLARE_ACCOUNT_ID") and os.environ.get("CLOUDFLARE_API_TOKEN"):
+        attempt("BMKG", lambda: parse_bmkg(fetch_bmkg(client), datetime.now(UTC)))
     frames = [f for f in frames if not f.empty]
     return pd.concat(frames, ignore_index=True) if frames else pd.DataFrame()
 

@@ -122,14 +122,14 @@ CREATE TABLE IF NOT EXISTS meta (schema_version INTEGER NOT NULL);
 
 -- Ground-station air quality (haze.stations), kept by us: ISPU serves the latest hour only.
 CREATE TABLE IF NOT EXISTS obs_aq (
-    network VARCHAR NOT NULL,       -- ISPU | DOE | NEA
+    network VARCHAR NOT NULL,       -- ISPU | DOE | NEA | BMKG
     station_id VARCHAR NOT NULL,
     name VARCHAR,
     region VARCHAR,                 -- province / state
     lat DOUBLE,
     lon DOUBLE,
     ts_utc TIMESTAMPTZ NOT NULL,
-    pm25 DOUBLE,                    -- µg/m³; ISPU = trailing 24 h mean, NEA = 1 h, DOE = from 24 h API
+    pm25 DOUBLE,                    -- µg/m³; ISPU = trailing 24 h mean, NEA/BMKG = 1 h, DOE = from 24 h API
     pm25_estimated BOOLEAN,         -- derived from an index, not measured
     index_value DOUBLE,
     index_kind VARCHAR,             -- ISPU | API | none

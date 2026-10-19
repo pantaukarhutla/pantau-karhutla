@@ -165,7 +165,7 @@ export const STYLE: StyleSpecification = {
     stations: {
       type: "geojson",
       data: fc(),
-      attribution: "Air: ISPU (KLH), DOE Malaysia, NEA Singapore",
+      attribution: "Air: ISPU (KLH), BMKG, DOE Malaysia, NEA Singapore",
     },
     early: { type: "geojson", data: fc(), attribution: "Early signals: Himawari Wild Fire (JAXA P-Tree), JMA Himawari-9" },
   },

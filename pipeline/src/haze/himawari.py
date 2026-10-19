@@ -29,6 +29,7 @@ import ssl
 from datetime import datetime, timedelta
 from pathlib import Path
 
+import certifi
 import duckdb
 import numpy as np
 import pandas as pd
@@ -92,7 +93,9 @@ def fetch(now: datetime, cache: Path = CACHE_DIR / "himawari", hours: int = WIND
     """Detections of the last `hours` (+1 h for the repeat rule). Each file is fetched
     once and kept parsed in `cache`; files older than a day are dropped."""
     cache.mkdir(parents=True, exist_ok=True)
-    c = ImplicitFTPS(context=ssl.create_default_context())
+    # certifi's (Mozilla) roots: P-Tree's chain ends at SECOM TLS RSA Root CA 2024, which the
+    # Ubuntu runner's system store lacked on 19 Oct 2026 (CERTIFICATE_VERIFY_FAILED).
+    c = ImplicitFTPS(context=ssl.create_default_context(cafile=certifi.where()))
     c.connect(os.environ["JAXA_FTP_HOST"])
     c.login(os.environ["JAXA_FTP_USER"], os.environ["JAXA_FTP_PASS"])
     c.prot_p()
@@ -103,8 +106,8 @@ def fetch(now: datetime, cache: Path = CACHE_DIR / "himawari", hours: int = WIND
             path = f"{ROOT}/{h:%Y%m}/{h:%d}/{h:%H}"
             try:
                 names = sorted(n for n in c.nlst(path) if n.endswith(".csv"))
-            except ftplib.error_perm:
-                continue  # the hour has no files (yet)
+            except (ftplib.error_perm, ftplib.error_temp):
+                continue  # the hour has no folder yet (P-Tree answers 450, a 'temporary' error)
             for name in (n.rsplit("/", 1)[-1] for n in names):
                 local = cache / f"{name}.parquet"
                 if not local.exists():

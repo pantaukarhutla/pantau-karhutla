@@ -31,8 +31,12 @@ export class FieldBuffer {
     (map.getSource(this.source(next)) as maplibregl.RasterTileSource).setTiles([tilesUrl]);
     map.setPaintProperty(this.layer(next), "raster-opacity", 0);
     if (this.onData) map.off("sourcedata", this.onData);
+    // Runs once: the 4 s fallback firing after a load-triggered swap would
+    // otherwise hide the layer it just showed (this.active is already `next`).
+    let done = false;
     const swap = () => {
-      if (token !== this.token) return;
+      if (done || token !== this.token) return;
+      done = true;
       if (this.onData) map.off("sourcedata", this.onData);
       this.onData = null;
       map.setPaintProperty(this.layer(next), "raster-opacity", this.opacity);

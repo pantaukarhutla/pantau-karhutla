@@ -267,6 +267,10 @@ details.more[open] > summary { margin-bottom: var(--space-2); }
 
 .cities th { font-weight: 500; color: var(--muted); font-size: var(--text-xs); text-align: right; padding: 2px; }
 .cities td { font-size: 11.5px; }
+/* Chips beside the numbers made the table ~500 px wide on a phone: one chip per line, right-aligned. */
+.cities .num { white-space: normal; }
+.cities td, .cities th { padding-left: 1px; padding-right: 1px; }
+.cities .ispu { display: block; width: fit-content; margin: 2px 0 0 auto; padding: 0 4px; font-size: 9px; white-space: nowrap; }
 .ispu { display: inline-block; font-size: 9.5px; padding: 0 5px; border-radius: 999px; border: 1px solid var(--border); margin-left: 3px; color: var(--ink-2); }
 .ispu.tidak_sehat { border-color: var(--ispu-tidak_sehat); color: var(--ispu-tidak_sehat); }
 /* the band red is too dark as text on the dark surface: lighten it */

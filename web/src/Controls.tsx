@@ -184,7 +184,11 @@ export function Cities({ cities, lang, s }: { cities: CityOutlook[]; lang: Lang;
             <tr key={c.name}>
               <td>{c.name}</td>
               <td className="num">
-                {c.pm25_day1_range ? `${capPm(c.pm25_day1_range[0])}–${capPm(c.pm25_day1_range[1])}` : "—"}
+                {c.pm25_day1_range
+                  ? c.pm25_day1_range[0] > 500
+                    ? capPm(c.pm25_day1_range[0])
+                    : `${capPm(c.pm25_day1_range[0])}–${capPm(c.pm25_day1_range[1])}`
+                  : "—"}
                 {c.ispu_days[0] && <span className={`ispu ${c.ispu_days[0]}`}>{s.ispu[c.ispu_days[0]]}</span>}
               </td>
               <td className="num">

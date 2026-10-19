@@ -29,7 +29,7 @@ export function ForecastBar({ times, p, nowIndex, lang, s }: { times: string[]; 
 }
 
 const LAYER_GROUPS: { title: "groupFire" | "groupAir" | "groupLand" | "groupMap"; keys: (keyof LayerToggles)[] }[] = [
-  { title: "groupFire", keys: ["flames", "glow", "risk", "spread", "columns"] },
+  { title: "groupFire", keys: ["flames", "glow", "early", "risk", "spread", "columns"] },
   { title: "groupAir", keys: ["stations", "smog", "himawari", "aod", "plumes", "wind"] },
   { title: "groupLand", keys: ["boundaries", "peat", "burnHistory"] },
   { title: "groupMap", keys: ["satellite"] },
@@ -68,6 +68,7 @@ export function LayerPanel({
     plumes: s.layerPlumes,
     wind: s.layerWind,
     spread: s.layerSpread,
+    early: s.layerEarly,
   };
   const on = Object.values(layers).filter(Boolean).length;
   return (

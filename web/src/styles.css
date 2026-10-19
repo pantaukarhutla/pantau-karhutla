@@ -264,6 +264,7 @@ details.more[open] > summary { margin-bottom: var(--space-2); }
 .swatch.flame { background: radial-gradient(circle at 50% 70%, #fff3c4, #ff9a2e 45%, #d0400f 80%); }
 .swatch.smog { background: linear-gradient(90deg, rgba(205,185,150,0.4), rgb(170,120,70), rgb(70,35,15)); }
 .swatch.spread { background: rgba(255,224,138,0.4); border: 1px dashed #fff1c2; }
+.swatch.early { background: none; border: 2px solid #fff; border-radius: 50%; }
 
 .cities th { font-weight: 500; color: var(--muted); font-size: var(--text-xs); text-align: right; padding: 2px; }
 .cities td { font-size: 11.5px; }

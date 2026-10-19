@@ -85,6 +85,12 @@ export function Legend({
           {s.legendSmokePath}
         </div>
       )}
+      {layers.early && live && (
+        <div>
+          <span className="swatch early" />
+          {s.legendEarly}
+        </div>
+      )}
       {layers.spread && hasSpread && (
         <div>
           <span className="swatch spread" />

@@ -10,8 +10,8 @@ from haze.pipeline import RunContext, Step
 from tests.conftest import raw_viirs
 
 NOW = datetime(2026, 9, 10, 12, tzinfo=UTC)
-# Steps that call upstream services (SiPongi, ISPU/DOE/NEA, Open-Meteo, GFWED, NOAA/BoM).
-NETWORK_STEPS = {"area", "stations_fetch", "smoke", "history", "danger", "outlook", "spread"}
+# Steps that call upstream services (SiPongi, ISPU/DOE/NEA, Open-Meteo, GFWED, NOAA/BoM, JAXA P-Tree).
+NETWORK_STEPS = {"area", "stations_fetch", "smoke", "history", "danger", "outlook", "spread", "himawari"}
 
 
 def offline_steps() -> list[Step]:

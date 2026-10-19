@@ -109,6 +109,14 @@ export const loadDanger = () => tryJson<Danger>("danger.json");
 export const loadOutlook = () => tryJson<Outlook>("outlook.json");
 export const loadFireHistory = () => tryJson<FireHistory>("fire_history.json");
 export const loadSpread = (id: string) => tryJson<SpreadForecast>(`spread/${id}.json`);
+/** Unconfirmed early heat signals (pipeline haze.himawari): [lon, lat, frp_mw, first, last] rows. */
+export interface EarlySignals {
+  generated_at: string;
+  latest_scan: string | null;
+  rows: [number, number, number, string, string][];
+}
+export const loadEarlySignals = () => tryJson<EarlySignals>("himawari/early.json");
+
 /** Older spread forecasts are not shown (the pipeline refreshes them every run). */
 export const SPREAD_MAX_AGE_H = 12;
 

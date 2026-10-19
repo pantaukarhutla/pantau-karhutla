@@ -19,6 +19,8 @@ export interface LayerToggles {
   plumes: boolean;
   wind: boolean;
   spread: boolean;
+  /** unconfirmed early heat signals (Himawari-9 Wild Fire, opt in) */
+  early: boolean;
 }
 
 export interface LayerState {
@@ -49,6 +51,7 @@ export function styleVisibility({ toggles: t, is3d, has }: LayerState): Record<s
     columns: t.columns && is3d,
     "spread-fill": t.spread,
     "spread-line": t.spread,
+    "early-ring": t.early,
   };
 }
 

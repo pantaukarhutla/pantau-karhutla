@@ -43,6 +43,10 @@ jobs:
     timeout-minutes: ${{ (inputs.backfill_since != '' || github.event_name == 'push') && 150 || 55 }}
     env:
       FIRMS_MAP_KEY: ${{ secrets.FIRMS_MAP_KEY }}
+      # Himawari early signals (haze.himawari): P-Tree login; without it the step is skipped.
+      JAXA_FTP_HOST: ftp.ptree.jaxa.jp
+      JAXA_FTP_USER: ${{ secrets.JAXA_FTP_USER }}
+      JAXA_FTP_PASS: ${{ secrets.JAXA_FTP_PASS }}
       HAZE_DATA_DIR: ${{ github.workspace }}/data
       # public/ sits inside the cached dir so unchanged files keep their
       # mtimes and the R2 sync uploads only what changed.

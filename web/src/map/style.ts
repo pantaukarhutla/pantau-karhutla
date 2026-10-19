@@ -167,6 +167,7 @@ export const STYLE: StyleSpecification = {
       data: fc(),
       attribution: "Air: ISPU (KLH), DOE Malaysia, NEA Singapore",
     },
+    early: { type: "geojson", data: fc(), attribution: "Early signals: Himawari Wild Fire (JAXA P-Tree), JMA Himawari-9" },
   },
   layers: drapedFirst([
     { id: "bg", type: "background", paint: { "background-color": "#0d0d0d" } },
@@ -414,6 +415,21 @@ export const STYLE: StyleSpecification = {
           1, "rgb(255,215,120)",
         ],
         "circle-opacity": coreOpacity(0.9),
+      },
+    },
+
+    // Unconfirmed early heat signals (Himawari, opt in): a hollow white ring, so it never
+    // reads as a VIIRS fire.
+    {
+      id: "early-ring",
+      type: "circle",
+      source: "early",
+      paint: {
+        "circle-color": "rgba(0,0,0,0)",
+        "circle-radius": ["interpolate", ["linear"], ["zoom"], 4, 6, 8, 10, 11, 16],
+        "circle-stroke-color": "#ffffff",
+        "circle-stroke-width": ["interpolate", ["linear"], ["zoom"], 4, 1.5, 8, 2.5],
+        "circle-stroke-opacity": 0.95,
       },
     },
 

@@ -1,5 +1,5 @@
 import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { dangerDayAt, loadAllSpread } from "./api/fire";
+import { dangerDayAt, loadAllSpread, loadEarlySignals } from "./api/fire";
 import { Dashboard, FireStats, Sources } from "./Dashboard";
 import { EventPanel } from "./EventPanel";
 import { MapView, type Focus, type LayerToggles } from "./MapView";
@@ -28,6 +28,7 @@ import { useAodDate } from "./hooks/useAodDate";
 import { useHimawariTime } from "./hooks/useHimawariTime";
 import { useAfterFirstPaint, useBurnGrid, useOnDemand, useStaticData, type StaticData } from "./hooks/useStaticData";
 import { indonesiaView, isPhone } from "./viewport";
+import { fmtClock } from "./format";
 // Tables load on first use: most visitors only see the map.
 const DataView = lazy(() => import("./DataView").then((m) => ({ default: m.DataView })));
 
@@ -67,6 +68,7 @@ const DEFAULT_LAYERS: LayerToggles = {
   plumes: true,
   wind: true,
   spread: false, // experimental: opt in
+  early: false, // unconfirmed Himawari signals: opt in
 };
 /** Saved choices over the defaults, so layers added later start at their default. */
 const parseLayers = (stored: string): LayerToggles => ({ ...DEFAULT_LAYERS, ...JSON.parse(stored) });
@@ -149,6 +151,19 @@ export default function App() {
   const future = !history && forecast.time > Date.now() + 90 * 60_000;
   const spreadAll = useOnDemand(loadAllSpread, future);
   const showAllSpread = future && !selected && spreadAll !== null;
+  // Unconfirmed Himawari heat signals: loaded when their layer is on, live mode only.
+  const early = useOnDemand(loadEarlySignals, layers.early && !history);
+  const earlyFeatures = useMemo<GeoJSON.Feature[]>(
+    () =>
+      layers.early && !history && early
+        ? early.rows.map(([lon, lat, frp, , last]) => ({
+            type: "Feature",
+            geometry: { type: "Point", coordinates: [lon, lat] },
+            properties: { frp, tip: s.earlyTip(fmtClock(last, lang)) },
+          }))
+        : [],
+    [early, layers.early, history, s, lang],
+  );
   const spreadAllDay = spreadAll ? Math.min(2, Math.max(0, Math.ceil((forecast.time - Date.parse(spreadAll.t0)) / 86_400_000) - 1)) : 0;
 
   // Danger day = the WIB date of the forecast slider (tomorrow if none).
@@ -207,6 +222,7 @@ export default function App() {
         dangerDay={dangerDay}
         burnHistory={burnGrid}
         stations={data.stations?.stations ?? []}
+        early={earlyFeatures}
         events={history ? [] : data.events}
         hotspots={hotspots}
         historyMode={history !== null}

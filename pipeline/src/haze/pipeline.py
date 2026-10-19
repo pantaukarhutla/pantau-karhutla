@@ -25,6 +25,7 @@ from haze import (
     events,
     fire_history,
     firms,
+    himawari,
     history,
     land,
     mask,
@@ -341,6 +342,8 @@ STEPS = [
     ),
     Step("alerts", _alerts, needs=("danger", "smoke")),
     Step("compare", _compare, needs=("ingest",)),
+    # Opt-in map layer of unconfirmed Himawari heat signals (skipped without JAXA_FTP_*).
+    Step("himawari", lambda ctx: himawari.publish(ctx.con, ctx.now, ctx.out), needs=("ingest",)),
     Step("progression", lambda ctx: progression.publish_all(ctx.con, ctx.season, ctx.out, ctx.now), needs=("events",)),
     Step(
         "spread",

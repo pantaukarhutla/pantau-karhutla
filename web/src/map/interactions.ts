@@ -7,7 +7,7 @@ import * as maplibregl from "maplibre-gl";
 const CLICKABLE = ["columns", "glow"];
 /** The flames and glow drawn at every detection: no id, so a tap opens the nearest fire. */
 const FLAMES = ["fire-glow", "fire-core"];
-const HOVER_TIPS = ["columns", "glow", "stations-dot", "kab-fill-hit", "peat-fill"];
+const HOVER_TIPS = ["columns", "glow", "stations-dot", "early-ring", "kab-fill-hit", "peat-fill"];
 /** Tap margin around the pointer (px): about a fingertip on phones. */
 const TAP_PX = 10;
 /** A flame opens a fire whose centre is at most this far away. */
@@ -44,16 +44,17 @@ export function bindInteractions(map: maplibregl.Map, onSelect: () => (id: strin
     map.on("mouseenter", layer, () => (map.getCanvas().style.cursor = "pointer"));
     map.on("mouseleave", layer, () => (map.getCanvas().style.cursor = ""));
   }
+  // One handler for every tooltip layer, showing the topmost feature: per-layer handlers
+  // let whichever fired last win, so a regency's name covered a station or a signal.
   const popup = new maplibregl.Popup({ closeButton: false, closeOnClick: false, className: "map-tip" });
-  for (const layer of HOVER_TIPS) {
-    map.on("mousemove", layer, (e) => {
-      const p = e.features?.[0]?.properties;
-      if (!p) return;
-      const text = p.tip ?? (p.provinsi ? `${p.name}, ${p.provinsi}` : layer === "peat-fill" ? `KHG ${p.name}` : p.name);
-      popup.setLngLat(e.lngLat).setText(String(text)).addTo(map);
-    });
-    map.on("mouseleave", layer, () => popup.remove());
-  }
+  map.on("mousemove", (e) => {
+    const f = map.queryRenderedFeatures(e.point, { layers: shown(HOVER_TIPS) })[0];
+    const p = f?.properties;
+    if (!p) return void popup.remove();
+    const text = p.tip ?? (p.provinsi ? `${p.name}, ${p.provinsi}` : f.layer.id === "peat-fill" ? `KHG ${p.name}` : p.name);
+    popup.setLngLat(e.lngLat).setText(String(text)).addTo(map);
+  });
+  map.getCanvas().addEventListener("mouseleave", () => popup.remove());
 }
 
 /** A short-lived label pinned at a place the reader asked to see. */

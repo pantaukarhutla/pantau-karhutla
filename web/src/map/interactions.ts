@@ -1,18 +1,46 @@
-// Pointer behaviour on the map: click a fire to open it, hover tooltips, and
+// Pointer behaviour on the map: click a fire (its dot, column or any of its flames) to
+// open it, hover tooltips, and
 // the collapsed credits line.
 import * as maplibregl from "maplibre-gl";
 
+/** A fire's own marks: its centre dot and its 3D column carry its id. */
 const CLICKABLE = ["columns", "glow"];
+/** The flames and glow drawn at every detection: no id, so a tap opens the nearest fire. */
+const FLAMES = ["fire-glow", "fire-core"];
 const HOVER_TIPS = ["columns", "glow", "stations-dot", "kab-fill-hit", "peat-fill"];
+/** Tap margin around the pointer (px): about a fingertip on phones. */
+const TAP_PX = 10;
+/** A flame opens a fire whose centre is at most this far away. */
+const NEAREST_FIRE_KM = 15;
+
+/** The id of the nearest burning fire (events source) within NEAREST_FIRE_KM of a point. */
+function nearestFire(map: maplibregl.Map, at: maplibregl.LngLat): string | null {
+  const kx = 111.32 * Math.cos((at.lat * Math.PI) / 180);
+  let best: { id: string; km: number } | null = null;
+  for (const f of map.querySourceFeatures("events")) {
+    if (f.geometry.type !== "Point" || f.properties?.status === "out") continue;
+    const [lon, lat] = f.geometry.coordinates;
+    const km = Math.hypot((lon - at.lng) * kx, (lat - at.lat) * 110.57);
+    if (km <= NEAREST_FIRE_KM && (!best || km < best.km)) best = { id: String(f.properties?.id), km };
+  }
+  return best?.id ?? null;
+}
 
 /** Wire clicks and tooltips; `onSelect` is read through a getter so the
  * latest callback is used without re-binding. */
 export function bindInteractions(map: maplibregl.Map, onSelect: () => (id: string) => void) {
-  for (const layer of CLICKABLE) {
-    map.on("click", layer, (e) => {
-      const id = e.features?.[0]?.properties?.id as string | undefined;
-      if (id) onSelect()(id);
-    });
+  const shown = (layers: string[]) => layers.filter((l) => map.getLayer(l));
+  map.on("click", (e) => {
+    const { x, y } = e.point;
+    const box: [maplibregl.PointLike, maplibregl.PointLike] = [
+      [x - TAP_PX, y - TAP_PX],
+      [x + TAP_PX, y + TAP_PX],
+    ];
+    const own = map.queryRenderedFeatures(box, { layers: shown(CLICKABLE) })[0]?.properties?.id as string | undefined;
+    const id = own ?? (map.queryRenderedFeatures(box, { layers: shown(FLAMES) }).length ? nearestFire(map, e.lngLat) : null);
+    if (id) onSelect()(id);
+  });
+  for (const layer of [...CLICKABLE, ...FLAMES]) {
     map.on("mouseenter", layer, () => (map.getCanvas().style.cursor = "pointer"));
     map.on("mouseleave", layer, () => (map.getCanvas().style.cursor = ""));
   }

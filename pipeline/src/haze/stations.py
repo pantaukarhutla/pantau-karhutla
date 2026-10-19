@@ -282,6 +282,11 @@ def upsert(con: duckdb.DuckDBPyConnection, df: pd.DataFrame) -> int:
     return len(df)
 
 
+def _text(v):
+    """A text column's value, None when missing: pandas reads SQL NULL in a string column as NaN."""
+    return None if pd.isna(v) else v
+
+
 def publish(con: duckdb.DuckDBPyConnection, now: datetime, out: Path, cache_dir: Path = CACHE_DIR) -> dict:
     since = now - timedelta(hours=72)
     obs = con.execute(
@@ -317,15 +322,15 @@ def publish(con: duckdb.DuckDBPyConnection, now: datetime, out: Path, cache_dir:
                 {
                     "network": net,
                     "id": sid,
-                    "name": last["name"],
-                    "region": last["region"],
+                    "name": _text(last["name"]),
+                    "region": _text(last["region"]),
                     "lat": round(float(last["lat"]), 4),
                     "lon": round(float(last["lon"]), 4),
                     "time": utc_minute(last["ts_utc"]),
                     "pm25": None if pd.isna(last["pm25"]) else round(float(last["pm25"]), 1),
                     "estimated": bool(last["pm25_estimated"]),
                     "index": None if pd.isna(last["index_value"]) else float(last["index_value"]),
-                    "index_kind": last["index_kind"],
+                    "index_kind": _text(last["index_kind"]),
                     "cams": None if pd.isna(last["cams"]) else round(float(last["cams"]), 1),
                     "stale": bool(last["ts_utc"] < pd.Timestamp(now) - pd.Timedelta(hours=6)),
                     "series": series,

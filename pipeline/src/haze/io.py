@@ -27,8 +27,10 @@ def write_text_if_changed(path: Path, text: str) -> bool:
 
 def write_json(path: Path, obj, default=None) -> bool:
     """Compact UTF-8 JSON (no ASCII escapes), written only when it changed.
-    `default` is json.dumps' fallback for values it cannot encode."""
-    return write_text_if_changed(path, json.dumps(obj, separators=(",", ":"), ensure_ascii=False, default=default))
+    `default` is json.dumps' fallback for values it cannot encode. NaN and Infinity raise:
+    they are not JSON, and one of them makes the browser reject the whole file."""
+    text = json.dumps(obj, separators=(",", ":"), ensure_ascii=False, default=default, allow_nan=False)
+    return write_text_if_changed(path, text)
 
 
 def read_json(path: Path):

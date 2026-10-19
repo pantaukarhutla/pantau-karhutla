@@ -1,8 +1,10 @@
+import json
 from datetime import UTC, datetime
 from pathlib import Path
 
 import numpy as np
 import pandas as pd
+import pytest
 
 from haze import cams_correction, db, stations
 from haze.geo import Grid
@@ -115,3 +117,19 @@ def test_ispu_conflicting_with_nearby_bmkg_is_left_out():
     )
     # 10x off within 50 km: out. 2.5x off: kept. 10x off but no BMKG within 50 km: kept.
     assert cams_correction.ispu_conflicts(st) == ["KOBAR"]
+
+
+def test_published_bmkg_stations_are_valid_json(tmp_path):
+    """BMKG rows have no province: a NaN region made stations.json invalid JSON (19 Oct 2026),
+    and the browser then dropped every station, ISPU and NEA too."""
+    con = db.connect(":memory:")
+    now = datetime(2026, 10, 19, 5, 30, tzinfo=UTC)
+    stations.upsert(con, stations.parse_bmkg(BMKG_PAGE, now))
+    # An ISPU row with a province: the column then holds strings, and pandas reads BMKG's NULL as NaN.
+    stations.upsert(con, stations.parse_ispu({"rows": [{"id_stasiun": "PKY", "waktu": "2026-10-19 11:00:00", "lat": "0",
+        "lon": "101", "a_pm25": "90", "c_pm25": "4", "provinsi": "Riau", "is_maintenance": "0"}]}))  # fmt: skip
+    stations.publish(con, now, tmp_path, cache_dir=tmp_path)
+    text = (tmp_path / "stations.json").read_text()
+    pub = json.loads(text, parse_constant=lambda c: pytest.fail(f"{c} in stations.json"))
+    region = {s["network"]: s["region"] for s in pub["stations"]}
+    assert len(pub["stations"]) == 27 and region == {"BMKG": None, "ISPU": "Riau"}

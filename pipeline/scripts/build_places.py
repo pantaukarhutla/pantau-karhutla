@@ -1,4 +1,4 @@
-"""Search index for the place box: province, regency, district and village names
+"""Search index for the place box: province (the 38 in force), regency, district and village names
 with one point each, from static/desa.parquet (OCHA/BPS COD-AB, CC BY-IGO).
 Writes web/public/places.json. Boundaries do not change, so this runs once and
 the output is committed, like desa_grid.npz.
@@ -16,8 +16,13 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
+from haze.desa import PROVINSI_NAMES
+from haze.regions import provinsi_2022
+
 ROOT = Path(__file__).resolve().parents[2]
 desa = pd.read_parquet(ROOT / "pipeline/static/desa.parquet")
+# COD-AB has the 34 provinces of 2020: the map's names, regrouped to the 38 in force (as haze desa does).
+desa["provinsi"] = [provinsi_2022(p, k) for p, k in zip(desa["provinsi"].replace(PROVINSI_NAMES), desa["kabupaten"])]
 desa["w"] = desa["area_km2"].clip(lower=0.01)
 
 

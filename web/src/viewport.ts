@@ -27,7 +27,7 @@ export function indonesiaView(): { center: [number, number]; zoom: number } {
 }
 
 /** Phone sheet when it starts as a peek (styles.css --sheet-h); used before the DOM exists. */
-const PEEK_PX = 132;
+const PEEK_PX = 148;
 
 export function mapPadding(panelOpen: boolean): PaddingOptions {
   if (isPhone()) {

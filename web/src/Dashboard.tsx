@@ -3,7 +3,7 @@ import { Card, More } from "./Card";
 import { MethodLink } from "./Methodology";
 import type { AreaEstimate, Dashboard as DashboardData } from "./api/events";
 import { LineChart, type Series } from "./charts";
-import { dateFormat, dateLocale, fmtDate, fmtDay, fmtInt, fmtShort, fmtSig2 } from "./format";
+import { dateFormat, dateLocale, fmtClock, fmtDate, fmtDay, fmtInt, fmtShort, fmtSig2 } from "./format";
 import type { Lang, Strings } from "./i18n";
 import { CONTACT_EMAIL, REPO_URL } from "./links";
 
@@ -51,7 +51,12 @@ export function Dashboard({ data, lang, s }: Pick<Props, "data" | "lang" | "s">)
     <div className="dashboard">
       <div className={warning ? "freshness stale" : "freshness"} role="status" title={s.passSchedule}>
         <span className="dot" />
-        {s.latest}: {fmtDate(latest, lang)} WIB · {s.hoursAgo(passLag)}
+        {/* When the site last updated, then when a satellite last passed: between passes
+            (~12 h apart) the second is hours old while the data is fresh. */}
+        {s.updatedAt(fmtClock(data.generated_at, lang))}
+        <div className="muted pass-line">
+          {s.latest}: {fmtDate(latest, lang)} WIB · {s.hoursAgo(passLag)}
+        </div>
         {warning && <div className="stale-note">{warning}</div>}
       </div>
 

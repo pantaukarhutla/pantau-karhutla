@@ -70,6 +70,11 @@ export function fmtDate(iso: string, lang: Lang): string {
   }).format(new Date(iso));
 }
 
+/** "14.03": time of day of a timestamp, in WIB. */
+export function fmtClock(iso: string, lang: Lang): string {
+  return dateFormat(dateLocale(lang), { timeZone: "Asia/Jakarta", hour: "2-digit", minute: "2-digit" }).format(new Date(iso));
+}
+
 /** "17 Okt": a calendar date (YYYY-MM-DD) in WIB. */
 export function fmtDay(date: string, lang: Lang): string {
   return dateFormat(dateLocale(lang), {

@@ -526,7 +526,7 @@ h3.sub { font-size: 11.5px; color: var(--ink-2); font-weight: 600; margin: 10px 
    as a bottom sheet that starts as a peek; the mode buttons sit behind the menu
    button and the legend behind its own button. --sheet-h follows the sheet. */
 @media (max-width: 760px) {
-  .app { --sheet-h: 132px; --top-h: 106px; }
+  .app { --sheet-h: 148px; --top-h: 106px; }
   .app:has(.sidebar.sheet-half) { --sheet-h: 46vh; }
   .app:has(.sidebar.sheet-full) { --sheet-h: 88vh; }
   .app:has(.topbar.menu-open) { --top-h: 158px; }
@@ -559,3 +559,4 @@ h3.sub { font-size: 11.5px; color: var(--ink-2); font-weight: 600; margin: 10px 
   .layer-panel { top: var(--top-h); }
   .maplibregl-ctrl-top-right { top: var(--top-h); }
 }
+.freshness .pass-line { flex-basis: 100%; padding-left: 14px; font-size: var(--text-sm); }

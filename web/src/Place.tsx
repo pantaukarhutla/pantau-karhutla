@@ -1,4 +1,4 @@
-// "Cek lokasimu" panel: choose a point (GPS, map tap or regency search) and
+// "Cek lokasimu" panel: choose a point (GPS, map tap or place search) and
 // read what the forecast and the fire record say about it.
 import { useEffect, useState } from "react";
 import { tryJson } from "./api/fetch";
@@ -6,6 +6,7 @@ import { bearingDeg, compassIndex, distanceKm } from "./geo";
 import { fmtDay, fmtInt, fmtNum, wibDate } from "./format";
 import type { Lang, Strings } from "./i18n";
 import { MethodLink } from "./Methodology";
+import { PlaceSearch } from "./PlaceSearch";
 import { RISK_COLORS } from "./palette";
 import { AIR_HOURS, NEAR_KM, type NearFire, type PlaceReport } from "./placeReport";
 
@@ -27,7 +28,7 @@ function nearestRegency(labels: Label[], lon: number, lat: number): string | nul
 
 type LabelFile = { features: { properties: { name: string; level: string }; geometry: { coordinates: [number, number] } }[] };
 
-/** Regency/city names with a point each, for the search box (loaded on first open). */
+/** Regency/city names with a point each, to name a point without one (loaded on first open). */
 function useRegencies(): Label[] {
   const [labels, setLabels] = useState<Label[]>([]);
   useEffect(() => {
@@ -50,32 +51,23 @@ interface Props {
   historyYears: [number, number] | null;
   lang: Lang;
   s: Strings;
-  onPlace: (lon: number, lat: number, label: string | null) => void;
+  onPlace: (lon: number, lat: number, label: string | null, zoom?: number) => void;
+  onGps: () => void;
+  gpsError: boolean;
   onPick: () => void;
   onOpenFire: (id: string) => void;
   onClose: () => void;
 }
 
-export function PlacePanel({ report, label, picking, historyYears, lang, s, onPlace, onPick, onOpenFire, onClose }: Props) {
+export function PlacePanel({ report, label, picking, historyYears, lang, s, onPlace, onGps, gpsError, onPick, onOpenFire, onClose }: Props) {
   const regencies = useRegencies();
-  const [query, setQuery] = useState("");
-  const [gpsError, setGpsError] = useState(false);
-  const matches = query.trim().length >= 2 ? regencies.filter((r) => r.name.toLowerCase().includes(query.trim().toLowerCase())).slice(0, 6) : [];
 
-  const gps = () => {
-    setGpsError(false);
-    navigator.geolocation?.getCurrentPosition(
-      (p) => onPlace(p.coords.longitude, p.coords.latitude, null),
-      () => setGpsError(true),
-      { enableHighAccuracy: false, timeout: 15_000, maximumAge: 600_000 },
-    );
-  };
   // Already allowed before: locate at once instead of asking for a second tap.
   useEffect(() => {
     if (report) return;
     navigator.permissions
       ?.query({ name: "geolocation" })
-      .then((st) => st.state === "granted" && gps())
+      .then((st) => st.state === "granted" && onGps())
       .catch(() => {});
     // Once, when the panel opens.
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -99,30 +91,14 @@ export function PlacePanel({ report, label, picking, historyYears, lang, s, onPl
 
       <div className="place-inputs">
         <div className="seg-row wrap">
-          <button className="seg" onClick={gps}>
+          <button className="seg" onClick={onGps}>
             {s.placeGps}
           </button>
           <button className={picking ? "seg on" : "seg"} onClick={onPick}>
             {s.placePick}
           </button>
         </div>
-        <input type="search" placeholder={s.placeSearch} value={query} onChange={(e) => setQuery(e.target.value)} aria-label={s.placeSearch} />
-        {matches.length > 0 && (
-          <ul className="place-matches">
-            {matches.map((m) => (
-              <li key={m.name}>
-                <button
-                  onClick={() => {
-                    setQuery("");
-                    onPlace(m.lon, m.lat, m.name);
-                  }}
-                >
-                  {m.name}
-                </button>
-              </li>
-            ))}
-          </ul>
-        )}
+        <PlaceSearch s={s} onChoose={(lon, lat, name, zoom) => onPlace(lon, lat, name, zoom)} />
         {picking && <p className="muted">{s.placePicking}</p>}
         {gpsError && <p className="callout warn">{s.placeGpsError}</p>}
       </div>

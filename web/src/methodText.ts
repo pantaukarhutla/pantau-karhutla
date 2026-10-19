@@ -50,7 +50,7 @@ const id: Methods = {
       "Ditambah DEA Hotspots (Geoscience Australia): deteksi VIIRS yang sama dari stasiun penerima langsung, tersedia ±1 jam setelah satelit lewat, sedangkan FIRMS 2–4 jam dan kadang melewatkan lintasan. DEA hanya menggantikan sementara: begitu FIRMS mengirim lintasan yang sama, deteksi DEA untuk lintasan itu dihapus dan diganti FIRMS. Pengolahan DEA menandai sedikit piksel tambahan di tepi api, jadi tanpa aturan ini angka 2026 akan lebih tinggi daripada data pembanding 2012–2025 yang hanya dari FIRMS.",
       "Yang ditampilkan: hanya di daratan/perairan dekat pantai Indonesia, tingkat kepercayaan sedang atau tinggi (MODIS ≥ 30%).",
       "Sumber panas tetap disaring: sel yang panas terus-menerus (≥ 6 bulan berbeda dalam setahun, atau ditandai FIRMS sebagai gunung api, industri, atau lepas pantai) beserta radius 750 m di sekitarnya. Contoh: PLTU, kilang, smelter, suar gas.",
-      "Diperbarui tiap 2 jam. Satelit melintas Indonesia sekitar 10–12 kali sehari, dengan jeda di antara lintasan.",
+      "Diperbarui tiap 30 menit. Satelit melintas Indonesia sekitar 10–12 kali sehari, dengan jeda di antara lintasan.",
     ],
     data: ["NASA FIRMS (area API, atau berkas regional Asia Tenggara 7 hari tanpa kunci).", "DEA Hotspots, Geoscience Australia (CC BY 4.0).", "Daftar sumber panas tetap: diturunkan dari arsip FIRMS 2019–2026."],
     limits: [
@@ -177,7 +177,7 @@ const id: Methods = {
       "Meluas: ≥ 50 piksel 375 m baru dalam satu hari.",
       "Risiko ekstrem: provinsi dengan ≥ 25% wilayah berisiko Ekstrem pada hari prakiraan pertama (biasanya hari ini; tanggalnya disebut di peringatan) (feed nasional: satu ringkasan harian).",
       "Udara: kota dengan prakiraan rata-rata PM2,5 24 jam kategori Tidak sehat atau lebih buruk.",
-      "Dihitung ulang setiap 2 jam; tiap peringatan punya ID tetap, jadi pembaca RSS menampilkannya sekali.",
+      "Dihitung ulang setiap 30 menit; tiap peringatan punya ID tetap, jadi pembaca RSS menampilkannya sekali.",
     ],
     data: ["Semua data di atas."],
     tested: [
@@ -349,7 +349,7 @@ const en: Methods = {
       "Plus DEA Hotspots (Geoscience Australia): the same VIIRS detections from direct-readout stations, online ~1 h after a pass where FIRMS takes 2–4 h and sometimes misses passes. DEA only stands in: once FIRMS delivers the same pass, DEA's detections for it are deleted and FIRMS's used. DEA's processing flags a few extra pixels at fire edges, so without this rule 2026 would count higher than the FIRMS-only 2012–2025 baselines.",
       "Shown: only on Indonesian land or near its coast, at nominal or high confidence (MODIS ≥ 30%).",
       "Persistent heat sources are removed: cells hot in ≥ 6 different months of a year, or flagged by FIRMS as volcano, industrial or offshore, plus 750 m around them (power plants, refineries, smelters, gas flares).",
-      "Updated every 2 hours. Satellites pass over Indonesia some 10–12 times a day, with gaps in between.",
+      "Updated every 30 minutes. Satellites pass over Indonesia some 10–12 times a day, with gaps in between.",
     ],
     data: ["NASA FIRMS (area API, or the keyless Southeast Asia 7-day files).", "DEA Hotspots, Geoscience Australia (CC BY 4.0).", "Persistent heat-source list: derived from the FIRMS archives 2019–2026."],
     limits: [
@@ -476,7 +476,7 @@ const en: Methods = {
       "Spreading: ≥ 50 new 375 m pixels in one day.",
       "Extreme danger: provinces with ≥ 25% of their land at Extreme on the first forecast day (usually today; the alert names the date) (national feed: one daily digest).",
       "Air: cities whose forecast 24 h mean PM2.5 is Unhealthy or worse.",
-      "Recomputed every 2 hours; each alert has a stable id, so feed readers show it once.",
+      "Recomputed every 30 minutes; each alert has a stable id, so feed readers show it once.",
     ],
     data: ["Everything above."],
     tested: [

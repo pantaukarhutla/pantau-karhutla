@@ -5,7 +5,7 @@ export const isPhone = () => window.matchMedia("(max-width: 760px)").matches;
 
 /** The part of the map that panels cover, so the camera centres in what is
  * left visible. Mirrors styles.css: the dashboard is a 372 px sidebar or a
- * 44vh bottom sheet; a fire or place panel is a 456 px right column or a
+ * bottom sheet (peek, half or full); a fire or place panel is a 456 px right column or a
  * 62vh sheet over it. */
 /** Indonesia from Aceh to Papua (lon/lat, deg). */
 const INDONESIA = { west: 95, east: 141, south: -11, north: 6 };
@@ -26,8 +26,17 @@ export function indonesiaView(): { center: [number, number]; zoom: number } {
   return { center: [(INDONESIA.west + INDONESIA.east) / 2, (INDONESIA.south + INDONESIA.north) / 2], zoom: Math.max(2, zoom - tilt) };
 }
 
+/** Phone sheet when it starts as a peek (styles.css --sheet-h); used before the DOM exists. */
+const PEEK_PX = 132;
+
 export function mapPadding(panelOpen: boolean): PaddingOptions {
-  if (isPhone()) return { left: 0, right: 0, top: 112, bottom: Math.round(window.innerHeight * (panelOpen ? 0.62 : 0.44)) };
+  if (isPhone()) {
+    // Measured, since the top bar and the sheet change height (search, menu, peek/half/full).
+    const top = document.querySelector(".topbar")?.getBoundingClientRect().bottom ?? 106;
+    const sheetTop = document.querySelector(".sidebar")?.getBoundingClientRect().top ?? window.innerHeight - PEEK_PX;
+    const bottom = panelOpen ? window.innerHeight * 0.62 : window.innerHeight - sheetTop;
+    return { left: 0, right: 0, top: Math.round(top + 8), bottom: Math.round(bottom) };
+  }
   // Desktop: the dashboard folds away while a panel is open (styles.css).
   return { left: panelOpen ? 0 : 372, right: panelOpen ? 456 : 0, top: 0, bottom: 0 };
 }

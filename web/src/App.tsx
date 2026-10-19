@@ -9,6 +9,7 @@ import { CompareCard } from "./Compare";
 import { Legend } from "./Legend";
 import { MethodologyPanel, MethodProvider } from "./Methodology";
 import { PlacePanel } from "./Place";
+import { PlaceSearch } from "./PlaceSearch";
 import { AIR_HOURS, assessPlace } from "./placeReport";
 import { ErrorBoundary } from "./ErrorBoundary";
 import { REPO_URL } from "./links";
@@ -107,16 +108,19 @@ export default function App() {
   // Where panels ask the map to look; a new object each time, so asking for
   // the same place twice flies there again.
   const [focus, setFocus] = useState<Focus | null>(null);
-  // On phones the open sheet hides the map: opening a fire or looking at a
-  // place folds it, so you see what you asked for.
-  const [sheetOpen, setSheetOpen] = useState(false);
+  // Phones: the dashboard is a bottom sheet at three heights. It starts as a
+  // peek (just the fire count) so the map shows; opening a fire or looking at
+  // a place folds it back, so you see what you asked for.
+  const [sheet, setSheet] = useState<Sheet>("peek");
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [legendOpen, setLegendOpen] = useState(false);
   const lookAt = useCallback((f: Focus) => {
     setFocus({ ...f });
-    setSheetOpen(false);
+    setSheet("peek");
   }, []);
   const selectFire = useCallback((id: string | null) => {
     setEventId(id);
-    if (id) setSheetOpen(false);
+    if (id) setSheet("peek");
   }, []);
 
   const data = useStaticData();
@@ -223,7 +227,7 @@ export default function App() {
         onContextLost={onContextLost}
       />
 
-      <header className="topbar">
+      <header className={menuOpen ? "topbar menu-open" : "topbar"}>
         <div className="brand">
           <span className="logo" aria-hidden>
             ●
@@ -233,6 +237,22 @@ export default function App() {
             <div className="brand-sub">{s.subtitle}</div>
           </div>
         </div>
+        <PlaceSearch
+          className="top-search"
+          s={s}
+          onChoose={(lon, lat, label, zoom) => {
+            setEventId(null);
+            setMenuOpen(false);
+            place.setOpen(true);
+            place.choose(lon, lat, label, zoom);
+          }}
+          onGps={() => {
+            setEventId(null);
+            setMenuOpen(false);
+            place.setOpen(true);
+            place.locate();
+          }}
+        />
         <nav className="toggles main-toggles" aria-label={s.title}>
           <span className="seg-group">
             <button className={view === "map" ? "seg on" : "seg"} onClick={() => setView("map")}>
@@ -278,6 +298,9 @@ export default function App() {
           </span>
         </nav>
         <div className="toggles util-toggles">
+          <button className={menuOpen ? "seg menu-btn on" : "seg menu-btn"} onClick={() => setMenuOpen(!menuOpen)} aria-expanded={menuOpen} aria-label={s.menu}>
+            <span aria-hidden>☰</span>
+          </button>
           <button className="seg" onClick={() => setLang(lang === "id" ? "en" : "id")}>
             {lang === "id" ? "EN" : "ID"}
           </button>
@@ -319,11 +342,9 @@ export default function App() {
         </Suspense>
       )}
 
-      <div className={sheetOpen ? "sidebar sheet-open" : "sidebar"}>
-        {/* Phones: the sidebar is a bottom sheet; this handle expands it. */}
-        <button className="sheet-handle" onClick={() => setSheetOpen(!sheetOpen)} aria-expanded={sheetOpen} aria-label={sheetOpen ? s.sheetLess : s.sheetMore}>
-          <span aria-hidden />
-        </button>
+      <div className={`sidebar sheet-${sheet}`}>
+        {/* Phones: the sidebar is a bottom sheet; tap or drag this handle. */}
+        <SheetHandle sheet={sheet} setSheet={setSheet} s={s} />
         {data.error && <div className="callout warn">{data.error}</div>}
         {history ? (
           <HistoryPanel h={history.summary} p={history.playback} lang={lang} s={s} />
@@ -341,6 +362,8 @@ export default function App() {
           lang={lang}
           s={s}
           onPlace={place.choose}
+          onGps={place.locate}
+          gpsError={place.gpsError}
           onPick={place.togglePicking}
           onOpenFire={(id) => {
             place.setOpen(false);
@@ -373,7 +396,11 @@ export default function App() {
         <ForecastBar times={forecast.times} p={forecast.playback} nowIndex={forecast.nowIndex} lang={lang} s={s} />
       )}
 
+      <button className={legendOpen ? "seg legend-btn on" : "seg legend-btn"} onClick={() => setLegendOpen(!legendOpen)} aria-expanded={legendOpen}>
+        {s.legendShow}
+      </button>
       <Legend
+        open={legendOpen}
         layers={layers}
         is3d={is3d}
         live={mode === "live"}
@@ -388,6 +415,37 @@ export default function App() {
       />
     </div>
     </MethodProvider>
+  );
+}
+
+type Sheet = "peek" | "half" | "full";
+const SHEETS: Sheet[] = ["peek", "half", "full"];
+
+/** Bottom-sheet handle (phones): a tap steps peek → half → full → peek; a drag
+ *  of more than 30 px moves one step up or down. */
+function SheetHandle({ sheet, setSheet, s }: { sheet: Sheet; setSheet: (v: Sheet) => void; s: Strings }) {
+  const startY = useRef<number | null>(null);
+  const k = SHEETS.indexOf(sheet);
+  const step = (d: number) => setSheet(SHEETS[Math.min(Math.max(k + d, 0), SHEETS.length - 1)]);
+  return (
+    <button
+      className="sheet-handle"
+      onClick={() => setSheet(SHEETS[(k + 1) % SHEETS.length])}
+      onTouchStart={(e) => (startY.current = e.touches[0].clientY)}
+      onTouchEnd={(e) => {
+        if (startY.current === null) return;
+        const dy = e.changedTouches[0].clientY - startY.current;
+        startY.current = null;
+        if (Math.abs(dy) > 30) {
+          e.preventDefault(); // a drag, not a tap: no click after it
+          step(dy < 0 ? 1 : -1);
+        }
+      }}
+      aria-expanded={sheet !== "peek"}
+      aria-label={sheet === "full" ? s.sheetLess : s.sheetMore}
+    >
+      <span aria-hidden />
+    </button>
   );
 }
 

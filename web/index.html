@@ -61,5 +61,13 @@
     <script type="module" src="/src/main.tsx"></script>
     <!-- Cloudflare Web Analytics: page views only, no cookies. -->
     <script defer src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon='{"token": "58bbfe3e208c4451851979918a0f5526"}'></script>
+    <!-- Google Analytics 4 (sets cookies). -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-RK1RZVM66B"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag() { dataLayer.push(arguments); }
+      gtag("js", new Date());
+      gtag("config", "G-RK1RZVM66B");
+    </script>
   </body>
 </html>

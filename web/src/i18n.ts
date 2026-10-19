@@ -28,14 +28,14 @@ const ISPU_EN: Record<Ispu, string> = {
 // Bahasa is the reference: English must have exactly the same keys and shapes.
 const id = {
   title: "Pantau Karhutla",
-  subtitle: "Pantauan kebakaran hutan dan lahan dari satelit NASA, diperbarui tiap 2 jam",
+  subtitle: "Pantauan kebakaran hutan dan lahan dari satelit NASA, diperbarui tiap 30 menit",
   status: { active: "Aktif", cooling: "Tak terlihat 1–3 hari", out: "Tak terlihat > 3 hari" },
   newToday: "Baru (24 jam)",
   heroLabel: "kebakaran menyala sekarang",
   heroSub: (fresh: string, quiet: string) => `${fresh} baru dalam 24 jam · ${quiet} tak terlihat 1–3 hari (mungkin mereda)`,
   latest: "Satelit terakhir melintas",
   hoursAgo: (h: number) => `${h.toFixed(0)} jam lalu`,
-  staleRun: (h: string) => `Data tertunda: pembaruan terakhir ${h} jam lalu (biasanya tiap 2 jam).`,
+  staleRun: (h: string) => `Data tertunda: pembaruan terakhir ${h} jam lalu (biasanya tiap 30 menit).`,
   stalePass: "Sudah lebih dari 16 jam tidak ada satelit baru yang melintas (biasanya tiap ±12 jam): data satelit mungkin terlambat.",
   passSchedule: "Satelit pembawa sensor VIIRS melintas sekitar pukul 01.30 dan 13.30 waktu setempat; datanya tiba sekitar 3 jam kemudian.",
   topGrowth: "Kebakaran yang paling meluas (pada hari terakhir terdeteksi)",
@@ -216,7 +216,7 @@ const id = {
   alertsFeedHint: "Feed Atom: tempel ke aplikasi pembaca RSS, ringkasan email, atau bot Telegram",
   alertsNone: (d: number) => `Tidak ada peringatan dalam ${d} hari terakhir.`,
   alertsNote:
-    "Otomatis dari satelit dan model, diperbarui tiap 2 jam; bukan peringatan resmi. Kebakaran baru: ≥ 10 titik panas dalam 48 jam di gambut, ≥ 20 di luar gambut (nasional: 20 / 50).",
+    "Otomatis dari satelit dan model, diperbarui tiap 30 menit; bukan peringatan resmi. Kebakaran baru: ≥ 10 titik panas dalam 48 jam di gambut, ≥ 20 di luar gambut (nasional: 20 / 50).",
   alertText: (a: Alert) =>
     a.kind === "fire"
       ? `Kebakaran baru${a.peat ? " di gambut" : ""}: ${a.name} (${a.hotspots} titik panas / 48 jam)`
@@ -290,11 +290,15 @@ const id = {
   smokeHeading: (dir: string, town: string | null, hours: number | null) =>
     `Asap kebakaran ini diperkirakan bergerak ke ${dir}${town ? `, lewat dekat ${town} dalam ±${hours} jam` : ""} (garis putus-putus di peta).`,
   placeTitle: "Cek lokasimu",
-  placeLead: "Udara, risiko kebakaran, dan api di sekitar satu titik: lokasimu, titik di peta, atau kabupaten/kota.",
+  placeLead: "Udara, risiko kebakaran, dan api di sekitar satu titik: lokasimu, titik di peta, atau nama kota, kecamatan, desa.",
   placeGps: "Pakai lokasi saya",
   placePick: "Pilih di peta",
   placePicking: "Ketuk peta untuk memilih titik…",
-  placeSearch: "Cari kabupaten/kota",
+  placeSearch: "Cari kota, kecamatan, desa…",
+  placeLevel: { p: "Provinsi", k: "Kab./kota", c: "Kecamatan", d: "Desa" },
+  placeNoMatch: "Tidak ditemukan",
+  menu: "Menu",
+  legendShow: "Legenda",
   placeGpsError: "Lokasi tidak bisa dibaca (izin ditolak atau tidak tersedia).",
   placeHere: (lat: string, lon: string) => `Titik ${lat}, ${lon}`,
   placeAir: "Kualitas udara (prakiraan)",
@@ -433,14 +437,14 @@ export type Strings = typeof id;
 
 const en: Strings = {
   title: "Indonesia Fire Watch",
-  subtitle: "Forest and land fires from NASA satellites, updated every 2 hours",
+  subtitle: "Forest and land fires from NASA satellites, updated every 30 minutes",
   status: { active: "Active", cooling: "Not seen 1–3 days", out: "Not seen 3+ days" },
   newToday: "New (24 h)",
   heroLabel: "fires burning now",
   heroSub: (fresh: string, quiet: string) => `${fresh} new in the last 24 h · ${quiet} not seen for 1–3 days (may be dying down)`,
   latest: "Last satellite pass",
   hoursAgo: (h: number) => `${h.toFixed(0)} h ago`,
-  staleRun: (h: string) => `Data delayed: last update ${h} h ago (normally every 2 h).`,
+  staleRun: (h: string) => `Data delayed: last update ${h} h ago (normally every 30 min).`,
   stalePass: "No new satellite pass for over 16 hours (normally about 12): satellite data may be late.",
   passSchedule: "The VIIRS satellites pass around 01:30 and 13:30 local time; their data arrives about 3 hours later.",
   topGrowth: "Largest new detected area (latest day seen)",
@@ -621,7 +625,7 @@ const en: Strings = {
   alertsFeedHint: "Atom feed: paste into a feed reader, email digest or Telegram bot",
   alertsNone: (d: number) => `No alerts in the last ${d} days.`,
   alertsNote:
-    "Automatic, from satellites and models, updated every 2 h; not an official warning. New fire: ≥ 10 hotspots in 48 h on peat, ≥ 20 elsewhere (national: 20 / 50).",
+    "Automatic, from satellites and models, updated every 30 min; not an official warning. New fire: ≥ 10 hotspots in 48 h on peat, ≥ 20 elsewhere (national: 20 / 50).",
   alertText: (a: Alert) =>
     a.kind === "fire"
       ? `New fire${a.peat ? " on peat" : ""}: ${a.name} (${a.hotspots} hotspots / 48 h)`
@@ -695,11 +699,15 @@ const en: Strings = {
   smokeHeading: (dir: string, town: string | null, hours: number | null) =>
     `This fire's smoke is forecast to drift ${dir}${town ? `, passing near ${town} in about ${hours} h` : ""} (dashed line on the map).`,
   placeTitle: "Check your location",
-  placeLead: "Air, fire danger and fires around one point: where you are, a point on the map, or a regency/city.",
+  placeLead: "Air, fire danger and fires around one point: where you are, a point on the map, or a city, district or village name.",
   placeGps: "Use my location",
   placePick: "Pick on map",
   placePicking: "Tap the map to pick a point…",
-  placeSearch: "Search regency/city",
+  placeSearch: "Search city, district, village…",
+  placeLevel: { p: "Province", k: "Regency/city", c: "District", d: "Village" },
+  placeNoMatch: "No match",
+  menu: "Menu",
+  legendShow: "Legend",
   placeGpsError: "Could not read your location (permission denied or unavailable).",
   placeHere: (lat: string, lon: string) => `Point ${lat}, ${lon}`,
   placeAir: "Air quality (forecast)",

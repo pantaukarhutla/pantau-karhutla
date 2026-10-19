@@ -6,6 +6,7 @@ import type { Lang, Strings } from "./i18n";
 import { HISTORY_COLORS, RISK_COLORS, STATUS_RGB, css } from "./palette";
 
 export function Legend({
+  open,
   layers,
   is3d,
   live,
@@ -18,6 +19,8 @@ export function Legend({
   lang,
   s,
 }: {
+  /** phones: shown only after the Legenda button */
+  open: boolean;
   layers: LayerToggles;
   is3d: boolean;
   /** live mode (not season history) */
@@ -37,7 +40,7 @@ export function Legend({
   s: Strings;
 }) {
   return (
-    <div className="legend" aria-label="legend">
+    <div className={open ? "legend open" : "legend"} aria-label="legend">
       <div>
         <span className="swatch flame" />
         {s.legendFlame}

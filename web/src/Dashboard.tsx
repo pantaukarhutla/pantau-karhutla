@@ -32,7 +32,7 @@ interface Props {
   onSelect: (id: string) => void;
 }
 
-/** The pipeline runs every 2 h; a VIIRS pass is due about every 12 h. */
+/** The pipeline runs every 30 min; a VIIRS pass is due about every 12 h. */
 const RUN_LATE_H = 5;
 const PASS_LATE_H = 16;
 

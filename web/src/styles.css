@@ -509,3 +509,53 @@ h3.sub { font-size: 11.5px; color: var(--ink-2); font-weight: 600; margin: 10px 
 .gh-link { display: inline-flex; align-items: center; gap: 5px; text-decoration: none; }
 .gh-mark { display: block; }
 @media (max-width: 760px) { .gh-word { display: none; } }
+
+/* Place search (top bar on phones, and the place panel). */
+.place-search { position: relative; }
+.place-search-row { display: flex; gap: 6px; }
+.place-search input[type="search"] {
+  flex: 1; min-width: 0; width: 100%; background: #1d1d1b; color: var(--ink); border: 1px solid var(--border); border-radius: 8px;
+  padding: 8px 12px; font: var(--text-base) var(--font);
+}
+.place-matches .match-name { display: block; }
+.place-matches .match-sub { display: block; font-size: var(--text-sm); color: var(--muted); }
+.match-none { padding: 6px 8px; }
+.top-search, .menu-btn, .legend-btn { display: none; }
+
+/* Phones: a calm first screen. Search on top, the map in the middle, the dashboard
+   as a bottom sheet that starts as a peek; the mode buttons sit behind the menu
+   button and the legend behind its own button. --sheet-h follows the sheet. */
+@media (max-width: 760px) {
+  .app { --sheet-h: 132px; --top-h: 106px; }
+  .app:has(.sidebar.sheet-half) { --sheet-h: 46vh; }
+  .app:has(.sidebar.sheet-full) { --sheet-h: 88vh; }
+  .app:has(.topbar.menu-open) { --top-h: 158px; }
+
+  .topbar { grid-template-areas: "brand util" "search search" "main main"; }
+  .top-search { display: block; grid-area: search; }
+  .top-search input[type="search"] { background: var(--surface-glass); backdrop-filter: blur(8px); min-height: 44px; font-size: 16px; }
+  .top-search .gps-btn { min-width: 44px; border: 1px solid var(--border); background: var(--surface-glass); color: #ffb37a; font-size: 18px; }
+  .top-search .place-matches { position: absolute; left: 0; right: 0; top: calc(100% + 4px); max-height: 50vh; overflow-y: auto; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5); }
+  .top-search .place-matches button { padding: 10px 8px; }
+  /* While typing, the results sit above the layer button and the map controls. */
+  .topbar:focus-within { z-index: var(--z-page); }
+  /* The top bar already has the search: no second box in the place panel. */
+  .place-panel .place-search { display: none; }
+  .menu-btn { display: inline-flex; align-items: center; }
+  .main-toggles, .util-toggles .gh-link { display: none; }
+  .topbar.menu-open .main-toggles { display: flex; }
+
+  .sidebar { height: var(--sheet-h); }
+  .sidebar.sheet-peek { overflow: hidden; }
+  .sidebar.sheet-full { z-index: var(--z-raised); }
+  .forecast-bar { bottom: calc(var(--sheet-h) + 8px); }
+  .app:has(.sheet-full) .forecast-bar, .app:has(.sheet-full) .legend-btn { display: none; }
+
+  .legend-btn { display: block; position: absolute; left: 8px; bottom: calc(var(--sheet-h) + 64px); z-index: var(--z-chrome); background: var(--surface-glass); border: 1px solid var(--border); }
+  .legend { display: none; bottom: calc(var(--sheet-h) + 112px); }
+  .legend.open { display: flex; }
+  .has-panel .legend-btn, .has-panel .legend.open { display: none; }
+
+  .layer-panel { top: var(--top-h); }
+  .maplibregl-ctrl-top-right { top: var(--top-h); }
+}

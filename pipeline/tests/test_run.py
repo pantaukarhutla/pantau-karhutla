@@ -165,3 +165,33 @@ def test_rebuild_reclusters_and_rewrites_every_page(tmp_path, monkeypatch, tagge
     )
     assert not ctx.cold and ctx.rebuild
     assert built == [None] and published == [None]  # whole season, every page
+
+
+def _firms_down(day_range):
+    raise firms.FirmsError("every FIRMS source failed: VIIRS_SNPP_NRT, VIIRS_NOAA20_NRT, VIIRS_NOAA21_NRT, MODIS_NRT")
+
+
+def test_firms_down_dea_carries_the_run(tmp_path, monkeypatch, tagger):
+    """A runner that cannot reach FIRMS (19 Oct 2026) still takes DEA's pass and publishes."""
+    monkeypatch.setattr(firms, "fetch_recent", _firms_down)
+    dea_pass = firms.normalise(raw_viirs([(-1.5, 110.205, "2026-09-10", "0600", "h", 20.0)]), "dea:hotspots")
+    monkeypatch.setattr("haze.dea.fetch", lambda since, client=None, until=None: dea_pass)
+    con, out = db.connect(tmp_path / "haze.duckdb"), tmp_path / "public"
+    db.upsert_hotspots(con, firms.normalise(raw_viirs([(-1.5, 110.2, "2026-09-09", "0600", "n", 10.0)]), "test"))
+    ctx = pipeline.scheduled(con, NOW, out, tagger=tagger, steps=offline_steps())
+    assert ctx.new == 1
+    assert json.loads((out / "dashboard.json").read_text())["counts"]["season_hotspots"] == 2
+
+
+def test_firms_and_dea_down_fails_the_run(tmp_path, monkeypatch, tagger):
+    """With no hotspot source at all the run must fail visibly, not publish stale data as fresh."""
+    monkeypatch.setattr(firms, "fetch_recent", _firms_down)
+
+    def dea_down(since, client=None, until=None):
+        raise httpx.ConnectError("Network is unreachable")
+
+    monkeypatch.setattr("haze.dea.fetch", dea_down)
+    con, out = db.connect(tmp_path / "haze.duckdb"), tmp_path / "public"
+    db.upsert_hotspots(con, firms.normalise(raw_viirs([(-1.5, 110.2, "2026-09-09", "0600", "n", 10.0)]), "test"))
+    with pytest.raises(RuntimeError, match="no hotspot source answered"):
+        pipeline.scheduled(con, NOW, out, tagger=tagger, steps=offline_steps())

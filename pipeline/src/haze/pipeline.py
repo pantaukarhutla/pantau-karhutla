@@ -224,7 +224,15 @@ def _backfill_season(ctx: RunContext) -> int:
 def _ingest(ctx: RunContext) -> int:
     if ctx.cold and ctx.backfill:
         ctx.new += _backfill_season(ctx)
-    ctx.new += ingest(ctx.con, firms.fetch_recent(ctx.day_range))
+    # FIRMS and DEA each carry the update alone when the other is down: a runner
+    # that cannot reach FIRMS (19 Oct 2026, "Network is unreachable") must not
+    # stop DEA, stations, smoke and publishing. Only both failing stops the run.
+    try:
+        ctx.new += ingest(ctx.con, firms.fetch_recent(ctx.day_range))
+        firms_ok = True
+    except firms.FirmsError as exc:
+        log.warning("FIRMS skipped this run, DEA carries the update: %s", exc)
+        firms_ok = False
     # DEA direct readout has passes 1-3 h before FIRMS; it stands in for a
     # pass until FIRMS delivers it (haze.dea).
     replaced = dea.supersede(ctx.con)
@@ -233,7 +241,9 @@ def _ingest(ctx: RunContext) -> int:
         n = ingest(ctx.con, fresh)
         log.info("DEA hotspots: %d new from passes FIRMS doesn't have yet; %d replaced by FIRMS", n, replaced)
         ctx.new += n
-    except Exception as exc:  # an extra source: never stops the FIRMS update
+    except Exception as exc:
+        if not firms_ok:
+            raise RuntimeError(f"no hotspot source answered (FIRMS and DEA): {exc}") from exc
         log.warning("DEA hotspots skipped: %s", exc)
     tag_hotspots(ctx.con, ctx.tagger)
     return ctx.new

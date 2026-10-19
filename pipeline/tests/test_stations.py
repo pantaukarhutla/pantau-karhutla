@@ -99,3 +99,19 @@ def test_parse_bmkg_hour_after_now_is_yesterday():
     # Just after midnight WIB the page still shows 23.00 of the day before.
     df = stations.parse_bmkg(BMKG_PAGE, datetime(2026, 10, 19, 17, 30, tzinfo=UTC))  # 00.30 WIB, 20 Oct
     assert df.iloc[0].ts_utc == pd.Timestamp("2026-10-19T04:00Z")  # 11.00 WIB on 19 Oct, not 20 Oct
+
+
+def test_ispu_conflicting_with_nearby_bmkg_is_left_out():
+    """Kotawaringin Barat, 19 Oct 2026: ISPU ~55 (24 h) next to BMKG Pangkalanbun ~770 (1 h)."""
+    lr = np.log
+    st = pd.DataFrame(
+        {
+            "network": ["BMKG", "ISPU", "ISPU", "BMKG", "ISPU"],
+            "lat": [-2.70, -2.65, -2.75, 0.0, 0.70],  # the last ISPU sits ~80 km from the second BMKG
+            "lon": [111.68, 111.70, 111.60, 110.0, 110.0],
+            "lr": [lr(5.0), lr(0.5), lr(2.0), lr(5.0), lr(0.5)],  # obs / CAMS on each station's own time basis
+        },
+        index=["BMKG-pkn2", "KOBAR", "NEAR-OK", "BMKG-far", "FAR"],
+    )
+    # 10x off within 50 km: out. 2.5x off: kept. 10x off but no BMKG within 50 km: kept.
+    assert cams_correction.ispu_conflicts(st) == ["KOBAR"]

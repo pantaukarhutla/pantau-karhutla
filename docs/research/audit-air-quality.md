@@ -499,3 +499,26 @@ python -I $S/checks.py                                # ISPU field semantics, ti
 
 `poll.sh` fetched ISPU and NEA (one request each) every 25 minutes, and DOE (6 states, 3 s
 apart) every 75 minutes, for about 2 h.
+
+## Addendum, 19 Oct 2026: BMKG stations and the ISPU conflict rule
+
+BMKG's 26 hourly PM2.5 stations joined `obs_aq` on 19 Oct 2026. Leave-one-station-out on a live
+snapshot (06:48 UTC; 105 ISPU, 26 BMKG, 5 NEA stations), same IDW, 150/300 km and 0.1–10 clip as
+`correction_field`, evaluated at the left-out station. MdAE = median |log error|, FAC2 = share
+within a factor of 2.
+
+| Correction from | ISPU targets (105) | ISPU Kalimantan (29) | BMKG targets (26) | BMKG Kalimantan (9) |
+| --- | --- | --- | --- | --- |
+| raw CAMS | 0.86 / 38% | 0.70 / 48% | 0.71 / 46% | 0.84 / 33% |
+| ISPU + NEA (before) | 0.52 / 62% | 0.44 / 86% | 0.52 / 54% | 0.36 / 67% |
+| + BMKG | 0.51 / 57% | 0.34 / 79% | 0.52 / 54% | 0.35 / 67% |
+| + BMKG, ISPU left out when > 5× off a BMKG station within 50 km | **0.46** / 59% | 0.35 / 79% | **0.43** / 62% | 0.33 / 78% |
+
+- Each station's ratio uses its own time basis (ISPU trailing 24 h, BMKG and NEA 1 h), so the
+  conflict test never compares a 24 h mean with an hourly value.
+- The rule left out 6 ISPU stations: Kotawaringin Barat Madurejo (14× off BMKG Pangkalanbun; ISPU
+  ~55 µg/m³ for days while BMKG read 500–1,050 every hour) and five Java stations reading
+  6–11 µg/m³. They stay on the map; they only stop steering the model.
+- Adding BMKG alone is mixed (lower MdAE in Kalimantan, lower FAC2). The rule improves MdAE at both
+  networks. One snapshot only: differences of ~0.05 are within the noise of §2's bootstrap.
+  The published skill (17 Oct) is not changed by this snapshot. Re-run on several days of `obs_aq`.

@@ -22,6 +22,13 @@ from haze.openmeteo import SMOG_GRID
 CORR_FULL_KM = 150.0
 CORR_ZERO_KM = 300.0
 CORR_CLIP = (0.1, 10.0)  # audit: CAMS reads 3-5x high over Java at night; 0.5 blocked that
+# An ISPU station whose obs/CAMS ratio is off by more than this from a BMKG station within
+# CONFLICT_KM is left out of the correction (still shown on the map): Kotawaringin Barat
+# read ~55 ug/m3 (24 h mean) for days while BMKG Pangkalanbun read 500-1,050 every hour.
+# Each ratio uses its own time basis (ISPU 24 h, BMKG 1 h), so the networks never mix.
+# Leave-one-out on 19 Oct 2026 (docs/research/audit-air-quality.md, addendum): MdAE at
+# ISPU stations 0.51 -> 0.46, at BMKG stations 0.52 -> 0.43; one snapshot.
+CONFLICT_KM, CONFLICT_RATIO = 50.0, 5.0
 HOLD_H = 24  # keep the local station correction this long into the forecast...
 EFOLD_H = 72  # ...then relax (in log space) towards the regional factor
 
@@ -68,6 +75,21 @@ def cams_at_stations(stations: pd.DataFrame, smog: dict) -> pd.Series:
     return out
 
 
+def ispu_conflicts(st: pd.DataFrame) -> list[str]:
+    """ISPU station ids (index of `st`: network, lat, lon, lr) whose log ratio is more than
+    CONFLICT_RATIO away from every BMKG station within CONFLICT_KM."""
+    isp, bm = st[st.network == "ISPU"], st[st.network == "BMKG"]
+    if isp.empty or bm.empty:
+        return []
+    la1, lo1 = np.radians(isp.lat.to_numpy())[:, None], np.radians(isp.lon.to_numpy())[:, None]
+    la2, lo2 = np.radians(bm.lat.to_numpy()), np.radians(bm.lon.to_numpy())
+    d = 6371.0 * np.arccos(np.clip(np.sin(la1) * np.sin(la2) + np.cos(la1) * np.cos(la2) * np.cos(lo1 - lo2), -1, 1))
+    gap = np.abs(isp.lr.to_numpy()[:, None] - bm.lr.to_numpy())
+    near = d <= CONFLICT_KM
+    closest = np.where(near, gap, np.inf).min(1)  # inf where no BMKG station is near
+    return sorted(isp.index[near.any(1) & (closest > np.log(CONFLICT_RATIO))])
+
+
 def correction_field(con: duckdb.DuckDBPyConnection, smog: dict, grid: Grid, now: datetime) -> tuple[Correction, dict]:
     """Station correction of CAMS PM2.5 on `grid`, and a summary (stations used,
     min / max factor). `apply_correction` turns it into a factor per forecast lead."""
@@ -84,11 +106,17 @@ def correction_field(con: duckdb.DuckDBPyConnection, smog: dict, grid: Grid, now
     for _, r in obs.iterrows():
         cams = cams_at(smog["pm25"], times, grid, r["lon"], r["lat"], r["ts_utc"], r["network"])
         if cams is not None and cams > 1 and r["pm25"] > 1:
-            logs.append((r["station_id"], r["lat"], r["lon"], np.log(r["pm25"] / cams)))
+            logs.append((r["station_id"], r["network"], r["lat"], r["lon"], np.log(r["pm25"] / cams)))
     if not logs:
         return Correction.none(grid), {"stations": 0}
     # One value per station: median over its recent hours.
-    st = pd.DataFrame(logs, columns=["id", "lat", "lon", "lr"]).groupby("id").median()
+    st = (
+        pd.DataFrame(logs, columns=["id", "network", "lat", "lon", "lr"])
+        .groupby("id")
+        .agg(network=("network", "first"), lat=("lat", "median"), lon=("lon", "median"), lr=("lr", "median"))
+    )
+    dropped = ispu_conflicts(st)
+    st = st.drop(index=dropped)
     lat, lon = grid.points()
     la, lo = np.radians(st["lat"].to_numpy()), np.radians(st["lon"].to_numpy())
     pla, plo = np.radians(lat)[:, None], np.radians(lon)[:, None]
@@ -106,6 +134,7 @@ def correction_field(con: duckdb.DuckDBPyConnection, smog: dict, grid: Grid, now
     factor0 = np.clip(np.exp(corr.local), *CORR_CLIP)
     info = {
         "stations": int(len(st)),
+        "dropped_ispu": dropped,
         "max_factor": round(float(factor0.max()), 2),
         "min_factor": round(float(factor0.min()), 2),
     }

@@ -303,6 +303,7 @@ details.more[open] > summary { margin-bottom: var(--space-2); }
   position: absolute; inset: 72px 12px 12px 12px; z-index: var(--z-page); overflow: auto;
   background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 16px;
 }
+.data-head .close { margin-left: auto; }
 .data-head { display: flex; flex-direction: column; gap: 10px; position: sticky; top: -14px; background: var(--surface); padding: 4px 0 10px; z-index: 1; }
 .filters { display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: center; }
 .filters select, .filters input[type=search] {

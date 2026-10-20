@@ -49,6 +49,7 @@ export function DataView({
   setTab,
   lang,
   s,
+  onClose,
   onOpenFire,
   onOpenPlace,
 }: {
@@ -56,6 +57,8 @@ export function DataView({
   /** in App, so #/gunung can open on its tab */
   tab: Tab;
   setTab: (t: Tab) => void;
+  /** back to the map */
+  onClose: () => void;
   lang: Lang;
   s: Strings;
   onOpenFire: (id: string) => void;
@@ -133,6 +136,9 @@ export function DataView({
           {tabButton("desa", s.desaTab)}
           {tabButton("gunung", s.gunungTab)}
           {tabButton("compare", s.dataCompare)}
+          <button className="close" onClick={onClose} aria-label={s.close}>
+            ×
+          </button>
         </div>
         {tab === "regions" && (
           <div className="filters">

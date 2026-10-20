@@ -366,6 +366,7 @@ export default function App() {
           season={data.dash.season}
           tab={dataTab}
           setTab={setDataTab}
+          onClose={() => setView("map")}
           lang={lang}
           s={s}
           onOpenFire={(id) => {

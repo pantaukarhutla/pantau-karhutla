@@ -31,6 +31,7 @@ import { indonesiaView, isPhone } from "./viewport";
 import { fmtClock } from "./format";
 // Tables load on first use: most visitors only see the map.
 const DataView = lazy(() => import("./DataView").then((m) => ({ default: m.DataView })));
+import type { Tab as DataTab } from "./DataView";
 
 interface View {
   center: [number, number];
@@ -39,13 +40,14 @@ interface View {
 
 // Shareable state lives in the hash: #/event/<id>?lang=en.
 // #/@<lon>,<lat>,<zoom> opens the map at a place (links in the alert feeds).
-function readHash(): { eventId: string | null; lang: Lang | null; view: View | null } {
+// #/gunung opens the mountains-on-fire table.
+function readHash(): { eventId: string | null; lang: Lang | null; view: View | null; gunung: boolean } {
   const [path, query] = window.location.hash.replace(/^#/, "").split("?");
   const m = path.match(/^\/event\/([\w-]+)/);
   const at = path.match(/^\/@(-?[\d.]+),(-?[\d.]+),([\d.]+)/);
   const lang = parseLang(new URLSearchParams(query).get("lang"));
   const view: View | null = at ? { center: [Number(at[1]), Number(at[2])], zoom: Number(at[3]) } : null;
-  return { eventId: m ? m[1] : null, lang, view };
+  return { eventId: m ? m[1] : null, lang, view, gunung: path === "/gunung" };
 }
 
 const INITIAL_VIEW: View = indonesiaView();
@@ -85,7 +87,8 @@ export default function App() {
   const [is3d, setIs3d] = useState(!isPhone());
   const [layers, setLayers] = usePersistentState(LAYERS_KEY, DEFAULT_LAYERS, parseLayers);
   const [mode, setMode] = useState<"live" | "history">("live");
-  const [view, setView] = useState<"map" | "data">("map");
+  const [view, setView] = useState<"map" | "data">(initial.gunung ? "data" : "map");
+  const [dataTab, setDataTab] = useState<DataTab>(initial.gunung ? "gunung" : "regions");
   const [method, setMethod] = useState<MethodId | null>(null);
   // A lost WebGL context (common after a tab sits hidden) breaks the map for
   // good; mount a new one at the same view once the tab is visible again.
@@ -203,10 +206,10 @@ export default function App() {
   useEffect(() => {
     // Only spell out the language in links when it differs from the browser's.
     const q = lang !== browserLang() ? `?lang=${lang}` : "";
-    const h = eventId ? `#/event/${eventId}${q}` : q ? `#/${q}` : "";
+    const h = eventId ? `#/event/${eventId}${q}` : view === "data" && dataTab === "gunung" ? `#/gunung${q}` : q ? `#/${q}` : "";
     if (window.location.hash !== h) window.history.replaceState(null, "", h || window.location.pathname);
     document.documentElement.lang = lang;
-  }, [eventId, lang]);
+  }, [eventId, lang, view, dataTab]);
 
   const openOnMap = () => {
     setMode("live");
@@ -361,6 +364,8 @@ export default function App() {
         <Suspense fallback={<div className="data-view muted">{s.loading}</div>}>
         <DataView
           season={data.dash.season}
+          tab={dataTab}
+          setTab={setDataTab}
           lang={lang}
           s={s}
           onOpenFire={(id) => {

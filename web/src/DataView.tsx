@@ -6,6 +6,7 @@ import { loadFireTable, loadRegions, type FireRow, type RegencyRow, type RegionR
 import { loadCompare, type Compare } from "./api/compare";
 import { CompareTable } from "./Compare";
 import { DesaTab } from "./Desa";
+import { GunungTab } from "./Gunung";
 import { downloadBlob, downloadCsv, downloadCsvColumns } from "./download";
 import { fmtDate, fmtDay, fmtInt, fmtPct } from "./format";
 import type { Lang, Strings } from "./i18n";
@@ -26,7 +27,7 @@ function Sparkline({ values, label }: { values: number[]; label: string }) {
   );
 }
 
-type Tab = "regions" | "fires" | "desa" | "compare";
+export type Tab = "regions" | "fires" | "desa" | "gunung" | "compare";
 type RegionSort = "d7" | "h24" | "active" | "season_hotspots" | "peat_share";
 type FireSort = "last_seen" | "first_seen" | "hotspot_count" | "peak_frp";
 
@@ -44,18 +45,22 @@ function downloadFiresGeojson(filename: string, rows: FireRow[]) {
 
 export function DataView({
   season,
+  tab,
+  setTab,
   lang,
   s,
   onOpenFire,
   onOpenPlace,
 }: {
   season: number;
+  /** in App, so #/gunung can open on its tab */
+  tab: Tab;
+  setTab: (t: Tab) => void;
   lang: Lang;
   s: Strings;
   onOpenFire: (id: string) => void;
   onOpenPlace: (lon: number, lat: number, label: string) => void;
 }) {
-  const [tab, setTab] = useState<Tab>("regions");
   const [regions, setRegions] = useState<Regions | null>(null);
   const [fires, setFires] = useState<FireRow[] | null>(null);
   const [region, setRegion] = useState<Region>(ALL_REGIONS);
@@ -122,10 +127,11 @@ export function DataView({
   return (
     <div className="data-view">
       <div className="data-head">
-        <div className="seg-row" role="tablist">
+        <div className="seg-row wrap" role="tablist">
           {tabButton("regions", s.dataRegions)}
           {tabButton("fires", s.dataFires)}
           {tabButton("desa", s.desaTab)}
+          {tabButton("gunung", s.gunungTab)}
           {tabButton("compare", s.dataCompare)}
         </div>
         {tab === "regions" && (
@@ -164,6 +170,7 @@ export function DataView({
       </div>
 
       {tab === "desa" && <DesaTab provinces={provinces} region={region} setRegion={setRegion} lang={lang} s={s} onOpenPlace={onOpenPlace} />}
+      {tab === "gunung" && <GunungTab lang={lang} s={s} onOpenPlace={onOpenPlace} />}
       {tab === "compare" && <CompareTab lang={lang} s={s} />}
 
       {tab === "regions" && regions && (

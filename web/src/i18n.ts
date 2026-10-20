@@ -231,6 +231,14 @@ const id = {
           ? `Risiko ekstrem ${a.date}: ${Math.round(a.share * 100)}% wilayah`
           : `Udara ${ISPU_ID[a.level].toLowerCase()}: ${a.city} (≈${a.pm25} µg/m³, 24 jam ke depan)`,
   desaTab: "Desa waspada",
+  gunungTab: "Gunung terbakar",
+  gunungLead: (n: string, km: number) => `${n} gunung punya titik panas dalam 24 jam terakhir, dalam ${km} km dari puncaknya. Puncak yang berdekatan digabung jadi satu gunung.`,
+  gunungName: "Gunung",
+  gunungNewest: "Titik terbaru",
+  gunungAlso: (names: string, more: number) => `Juga: ${names}${more ? ` +${more} puncak` : ""}`,
+  gunungEmpty: "Tidak ada gunung dengan titik panas dalam 24 jam terakhir.",
+  gunungNote:
+    "Titik panas = satu piksel citra satelit NASA yang jauh lebih panas dari sekitarnya, jadi satu api besar bisa tercatat puluhan titik. Di gunung api aktif sebagian titik bisa berasal dari panas kawah. Ini deteksi satelit, bukan laporan lapangan: sebelum mendaki, cek status jalur ke pengelola taman nasional atau Tahura. Nama puncak: GeoNames.",
   csvHeaders: {
     id: "id",
     name: "nama",
@@ -647,6 +655,14 @@ const en: Strings = {
           ? `Extreme danger ${a.date}: ${Math.round(a.share * 100)}% of the province`
           : `Air ${ISPU_EN[a.level].toLowerCase()}: ${a.city} (≈${a.pm25} µg/m³, next 24 h)`,
   desaTab: "Villages at risk",
+  gunungTab: "Mountains on fire",
+  gunungLead: (n: string, km: number) => `${n} mountains have hotspots in the last 24 h within ${km} km of their summit. Nearby summits are grouped into one mountain.`,
+  gunungName: "Mountain",
+  gunungNewest: "Newest hotspot",
+  gunungAlso: (names: string, more: number) => `Also: ${names}${more ? ` +${more} summits` : ""}`,
+  gunungEmpty: "No mountain has hotspots in the last 24 h.",
+  gunungNote:
+    "A hotspot is one NASA satellite pixel much hotter than its surroundings, so one large fire can show as dozens of hotspots. On active volcanoes some hotspots can be crater heat. These are satellite detections, not field reports: before a climb, check the trail status with the national park or Tahura office. Summit names: GeoNames.",
   csvHeaders: {
     id: "id",
     name: "name",

@@ -53,7 +53,7 @@ function readHash(): { eventId: string | null; lang: Lang | null; view: View | n
 const INITIAL_VIEW: View = indonesiaView();
 const MAX_MAP_REBUILDS = 3; // per minute
 
-const LAYERS_KEY = "haze.layers.v3"; // v2: spread forecast off by default; v3: boundaries on
+const LAYERS_KEY = "haze.layers.v4"; // v2: spread forecast off by default; v3: boundaries on; v4: fire-smoke forecast off
 const DEFAULT_LAYERS: LayerToggles = {
   satellite: true,
   flames: true,
@@ -67,7 +67,7 @@ const DEFAULT_LAYERS: LayerToggles = {
   smog: true,
   aod: false, // observed haze: opt in
   himawari: false, // live satellite image: opt in
-  plumes: true,
+  plumes: false, // a model forecast, easy to read as observed smoke: opt in
   wind: true,
   spread: false, // experimental: opt in
   early: false, // unconfirmed Himawari signals: opt in

@@ -52,7 +52,7 @@ const id: Methods = {
       "Sumber panas tetap disaring: sel yang panas terus-menerus (≥ 6 bulan berbeda dalam setahun, atau ditandai FIRMS sebagai gunung api, industri, atau lepas pantai) beserta radius 750 m di sekitarnya. Contoh: PLTU, kilang, smelter, suar gas.",
       "Diperbarui tiap 30 menit. Satelit melintas Indonesia sekitar 10–12 kali sehari, dengan jeda di antara lintasan.",
     ],
-    data: ["NASA FIRMS (area API, atau berkas regional Asia Tenggara 7 hari tanpa kunci).", "DEA Hotspots, Geoscience Australia (CC BY 4.0).", "Daftar sumber panas tetap: diturunkan dari arsip FIRMS 2019–2026."],
+    data: ["NASA FIRMS (area API, atau berkas regional Asia Tenggara 7 hari tanpa kunci).", "DEA Hotspots, Geoscience Australia (CC BY 4.0).", "Daftar sumber panas tetap: diturunkan dari arsip FIRMS 2019–2026.", "Sinyal panas awal (lapisan Himawari): produk riset Himawari Wild Fire (dibuat dari data Himawari-9 milik JMA) yang dipakai di situs ini disediakan oleh P-Tree System, Japan Aerospace Exploration Agency (JAXA)."],
     limits: [
       "Satu kebakaran bisa menghasilkan banyak titik panas, dan satu titik panas belum tentu kebakaran (pantulan matahari, atap panas).",
       "Awan dan asap tebal menutupi api; api kecil atau api gambut di bawah permukaan sering tidak terdeteksi.",
@@ -351,7 +351,7 @@ const en: Methods = {
       "Persistent heat sources are removed: cells hot in ≥ 6 different months of a year, or flagged by FIRMS as volcano, industrial or offshore, plus 750 m around them (power plants, refineries, smelters, gas flares).",
       "Updated every 30 minutes. Satellites pass over Indonesia some 10–12 times a day, with gaps in between.",
     ],
-    data: ["NASA FIRMS (area API, or the keyless Southeast Asia 7-day files).", "DEA Hotspots, Geoscience Australia (CC BY 4.0).", "Persistent heat-source list: derived from the FIRMS archives 2019–2026."],
+    data: ["NASA FIRMS (area API, or the keyless Southeast Asia 7-day files).", "DEA Hotspots, Geoscience Australia (CC BY 4.0).", "Persistent heat-source list: derived from the FIRMS archives 2019–2026.", "Early heat signals (Himawari layer): the research product of Himawari Wild Fire (produced from JMA's Himawari-9) used on this site was supplied by the P-Tree System, Japan Aerospace Exploration Agency (JAXA)."],
     limits: [
       "One fire can produce many hotspots, and one hotspot is not necessarily a fire (sun glint, hot roofs).",
       "Cloud and thick smoke hide fires; small fires and smouldering peat are often missed.",

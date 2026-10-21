@@ -48,7 +48,11 @@ WINDOW_H = 12  # points live this long after their last scan
 REPEAT_KM, REPEAT_MIN = 3.0, (5, 60)
 NEW_KM, LOOKBACK_H = 5.0, 72
 STATIC_KM, FALSE_KM = 2.0, 1.5
-CREDIT = "Himawari Wild Fire (JAXA P-Tree), from JMA Himawari-9"
+# Wording required by JAXA (P-Tree User Guide, "3. Reporting requirement").
+CREDIT = (
+    "Research product of Himawari Wild Fire (produced from Himawari-9) was supplied by the P-Tree System, "
+    "Japan Aerospace Exploration Agency (JAXA)."
+)
 
 
 class ImplicitFTPS(ftplib.FTP_TLS):

@@ -167,7 +167,7 @@ export const STYLE: StyleSpecification = {
       data: fc(),
       attribution: "Air: ISPU (KLH), BMKG, DOE Malaysia, NEA Singapore",
     },
-    early: { type: "geojson", data: fc(), attribution: "Early signals: Himawari Wild Fire (JAXA P-Tree), JMA Himawari-9" },
+    early: { type: "geojson", data: fc(), attribution: "Early signals: research product of Himawari Wild Fire (from Himawari-9) supplied by the P-Tree System, JAXA" },
   },
   layers: drapedFirst([
     { id: "bg", type: "background", paint: { "background-color": "#0d0d0d" } },

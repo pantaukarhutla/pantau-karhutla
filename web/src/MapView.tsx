@@ -436,11 +436,13 @@ function fireSources(
       c.fresh += fresh * w;
       cells.set(key, c);
     }
+    // Flames spread over the merge cell, so neighbouring cells touch.
+    const cellM = (MERGE_PX * 40075016.686 * Math.cos((map.getCenter().lat * Math.PI) / 180)) / worldPx;
     for (const c of cells.values()) {
       const lon = c.lon / c.w;
       const lat = c.lat / c.w;
       const [u, v] = windAt(lon, lat);
-      sources.push({ lon, lat, i: Math.min(3, Math.max(0.4, Math.sqrt(c.frp) / 6)) * (c.fresh / c.w), u, v });
+      sources.push({ lon, lat, i: Math.min(3, Math.max(0.4, Math.sqrt(c.frp) / 6)) * (c.fresh / c.w), u, v, r: 0.6 * cellM });
     }
   } else {
     for (const e of significant) {

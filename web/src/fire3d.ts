@@ -22,6 +22,8 @@ export interface FireSource {
   /** wind towards east / north, m/s */
   u: number;
   v: number;
+  /** ground the flames spread over (m); neighbouring merged detections then burn as one front */
+  r?: number;
 }
 
 const C = 40075016.686; // earth circumference, m
@@ -30,7 +32,7 @@ const VS = `#version 300 es
 precision highp float;
 layout(location=0) in vec2 aCorner;
 layout(location=1) in vec3 aPos;     // metres east / north of origin, metres altitude
-layout(location=2) in vec4 aP;       // seed, intensity, phase, unused
+layout(location=2) in vec4 aP;       // seed, intensity, phase, spread radius (m)
 layout(location=3) in vec2 aWind;    // m/s
 uniform mat4 uMatrix;
 uniform float uTime;
@@ -48,7 +50,8 @@ float rnd(float s) { return fract(sin(s * 12.9898) * 43758.5453); }
 void main() {
   float seed = aP.x;
   float I = aP.y;
-  float life = uKind < 0.5 ? 0.9 + 0.5 * rnd(seed + 1.0) : 9.0 + 5.0 * rnd(seed + 2.0);
+  // Flames live ~2 s: shorter lives made a fast flicker that read as a cartoon.
+  float life = uKind < 0.5 ? 1.8 + 0.8 * rnd(seed + 1.0) : 9.0 + 5.0 * rnd(seed + 2.0);
   float tl = uTime / life + aP.z;
   float cyc = floor(tl);
   float a = fract(tl);
@@ -61,12 +64,15 @@ void main() {
   vec2 wd = ws > 0.1 ? aWind / ws : vec2(0.0);
   float half_;
   if (uKind < 0.5) {
+    // Spread over the source's ground (its merged detections), not a point: a
+    // dense fire then burns as one front instead of a grid of separate flames.
     float ang = r1 * 6.2831;
-    float rad = sqrt(r2) * 3.5 * U * sI;
-    p.xy += vec2(cos(ang), sin(ang)) * rad * (1.0 - 0.6 * a);
+    float spread = max(3.5 * U * sI, aP.w);
+    float rad = sqrt(r2) * spread;
+    p.xy += vec2(cos(ang), sin(ang)) * rad * (1.0 - 0.3 * a);
     p.z += a * 16.0 * U * sI;
     p.xy += wd * min(ws, 8.0) * a * a * 0.35 * U;
-    half_ = U * (3.0 + 1.8 * r1) * sI * (1.0 - 0.5 * a);
+    half_ = max(U * (3.0 + 1.8 * r1) * sI, aP.w * (0.4 + 0.25 * r1)) * (1.0 - 0.5 * a);
   } else {
     // Smoke: buoyant rise that saturates quickly, then rides the wind.
     float ang = r1 * 6.2831;
@@ -272,7 +278,7 @@ export class Fire3DLayer implements maplibregl.CustomLayerInterface {
         const y = (s.lat - c.lat) * mPerDegLat;
         for (let k = 0; k < n; k++) {
           const seed = si * 131 + k * 17 + salt;
-          data.set([x, y, z, seed % 997, s.i, (k / n + ((si * 0.618) % 1)) % 1, 0, s.u, s.v], o);
+          data.set([x, y, z, seed % 997, s.i, (k / n + ((si * 0.618) % 1)) % 1, s.r ?? 0, s.u, s.v], o);
           o += 9;
         }
       });
